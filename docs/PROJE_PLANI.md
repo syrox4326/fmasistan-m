@@ -124,9 +124,13 @@ Bellek okumanın bu proje için değeri:
 Maliyeti: Her FM yamasında bellek adresleri değişebilir. Bakım yükü getirir ve ciddi
 tersine mühendislik ister.
 
-Olası yol: Önce dışa aktarma ve ekran görüntüsüyle çalışan bir sürüm yapmak. Bellek okumayı
-ayrı bir veri kaynağı modülü olarak sonradan eklemek. Analiz motoru, verinin nereden
-geldiğinden bağımsız olacak şekilde tasarlanacak.
+**Karar (kullanıcı): Birincil veri kaynağı bellek okuma olacak.** Detaylar yerel
+oturumda konuşulacak. Tasarım ilkeleri:
+- Bellek okuma ayrı bir veri kaynağı modülü olacak. Analiz motoru verinin nereden
+  geldiğinden bağımsız kalacak.
+- Yama sonrası bozulmaları hızlı tespit edip düzeltmek için sürüm kontrolü ve
+  doğrulama testleri olacak.
+- Okunamayan veri için yedek yol (dışa aktarma veya ekran görüntüsü) kalabilir.
 
 ### 4.2 Yapay zekâ gerekli mi?
 Değerlendirme: **Evet, ama tek başına değil.**
