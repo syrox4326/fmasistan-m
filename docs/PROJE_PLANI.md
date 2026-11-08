@@ -68,6 +68,24 @@ Doğrudan okumak kırılgan bir yöntem ve her yamada bozulabilir. Değerlendiri
 Ön öneri: **Dışa aktarma (birincil) + ekran görüntüsü (taktik ekranları için)**.
 FM27'de bunun nasıl çalıştığı kullanıcının bilgisayarında test edilerek doğrulanacak.
 
+**Referans: Teknik Oda (https://teknikodafm.com).** FM verisini çekip oyuncu bulma ve CA/PA
+gösterme odaklı bir asistan. Taktik analizi hedefimiz kadar derin değil, ama veri alma
+yöntemi örnek alınabilir. CA/PA ve gizli öznitelikler oyunda görünmediği ve dışa
+aktarılamadığı için büyük ihtimalle **bellek okuma** kullanıyor. Bu henüz doğrulanmadı.
+Site bulut oturumundan erişilemedi. Yerelde incelenecek.
+
+Bellek okumanın bu proje için değeri:
+- Kullanıcı hiçbir şey dışa aktarmadan tüm veri otomatik gelir.
+- Gizli öznitelikler (tutarlılık, büyük maç, sakatlık yatkınlığı vb.) analize katılabilir.
+- Taktik ve antrenman verisi de muhtemelen bellekte bulunuyor. Araştırılacak.
+
+Maliyeti: Her FM yamasında bellek adresleri değişebilir. Bakım yükü getirir ve ciddi
+tersine mühendislik ister.
+
+Olası yol: Önce dışa aktarma ve ekran görüntüsüyle çalışan bir sürüm yapmak. Bellek okumayı
+ayrı bir veri kaynağı modülü olarak sonradan eklemek. Analiz motoru, verinin nereden
+geldiğinden bağımsız olacak şekilde tasarlanacak.
+
 ### 4.2 Yapay zekâ gerekli mi?
 Değerlendirme: **Evet, ama tek başına değil.**
 
