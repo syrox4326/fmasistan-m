@@ -78,7 +78,8 @@ Uygulama her şeyi bilen biri gibi davranmayacak. FM'nin gerçekçiliğini koruy
   - Asistan menajerin taktik bilgisi ve ilgili öznitelikleri, taktik analizinin
     derinliğini ve isabetini belirler.
 - Bu sayede elit bir ekibin farkı gerçekten hissedilir.
-- Açık soru: Kullanıcı isterse gerçekçiliği kapatan bir "tam veri" modu olsun mu?
+- **Karar: "Her şeyi bilen" bir mod olmayacak.** Gerçekçilik her zaman açık. Uygulama,
+  ekibin bilemeyeceği bilgiyi kullanıcıya hiçbir şekilde göstermez.
 
 ### 3.6 Teknik ekiple yazışma
 - Kullanıcı her ekip üyesiyle (örn. asistan menajer Jim Fraser) **gerçek bir sohbet**
