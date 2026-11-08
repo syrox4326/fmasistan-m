@@ -25,6 +25,17 @@ uygulamalar" gibi olmayacak.
   Gereksiz emoji, jenerik kart yığını veya şişirilmiş metin olmayacak.
 - Kod temiz, test edilmiş ve sürdürülebilir olacak.
 
+### Kesin Kural: Teknik ekip itaatkâr değil, objektiftir
+- Asistan menajer, gözlemciler ve tüm teknik ekip **kullanıcıyı onaylamak ya da her dediğini
+  yapmak amacı taşımaz.**
+- Her ekip üyesinin kendi bağımsız görüşü vardır. Kullanıcının fikrine katılmadığında bunu
+  açıkça ve gerekçesiyle söyler. Gerekirse bilinçli olarak **karşı tez** üretir.
+- Kullanıcının fikrini benimseyebilir, ama yalnızca veri ve argümanla ikna olduğunda.
+  Sırf kullanıcı ısrar ettiği için görüş değiştirmez.
+- Görüşleri veriye ve kendi futbol felsefesine (FM'deki tercih ettiği diziliş, oyun tarzı,
+  kişilik özellikleri) dayanır. Dalkavukluk açıkça bir hata olarak kabul edilir ve test
+  edilir.
+
 ## 3. Ana Özellikler
 
 ### 3.1 Kendi taktiğimizin analizi
@@ -46,7 +57,37 @@ uygulamalar" gibi olmayacak.
 - Haftalık programa bakıp **aylık antrenman programı** üretmek. Kullanıcı bu programı
   oyuna elle girecek.
 
-### 3.4 Futbol ve FM27 bilgi tabanı
+### 3.4 Moneyball Analizcileri (oyuncu keşfi)
+- Amaç: **takımın sistemine en uygun ve fiyat/performans oranı en yüksek** oyuncuları ve
+  gün yüzüne çıkmamış yetenekleri bulmak.
+- Değer ölçütü: sisteme ve rol uyum skoru ile toplam maliyet (bonservis, maaş, sözleşme
+  süresi) birlikte değerlendirilir. Yaş, gelişim alanı, yeniden satış değeri, sözleşmesi
+  biten ve bedelsiz oyuncular da hesaba katılır.
+- Her öneride "neden bu oyuncu, sistemimizde hangi rolü, kime alternatif" sorularının
+  gerekçeli cevabı bulunur.
+
+### 3.5 Teknik ekip gerçekçiliği
+Uygulama her şeyi bilen biri gibi davranmayacak. FM'nin gerçekçiliğini koruyacak.
+- Uygulama kullanıcının **gerçek teknik ekibini** (gözlemciler, asistan, analistler,
+  antrenörler) ve özniteliklerini okur.
+- Analiz ve keşif kalitesi ekibin özniteliklerine bağlıdır:
+  - Elit gözlemciler (yüksek Oyuncu Yeteneğini Değerlendirme / Potansiyel Değerlendirme)
+    isabetli ve dar aralıklı değerlendirmeler yapar.
+  - Vasat gözlemcilerin tahminleri daha geniş belirsizlik aralığına ve hata payına sahiptir.
+    Gerçek veriyi bilsek bile, ekip "bilemeyeceği" bilgiyi kullanmaz.
+  - Asistan menajerin taktik bilgisi ve ilgili öznitelikleri, taktik analizinin
+    derinliğini ve isabetini belirler.
+- Bu sayede elit bir ekibin farkı gerçekten hissedilir.
+- Açık soru: Kullanıcı isterse gerçekçiliği kapatan bir "tam veri" modu olsun mu?
+
+### 3.6 Teknik ekiple yazışma
+- Kullanıcı her ekip üyesiyle (örn. asistan menajer Jim Fraser) **gerçek bir sohbet**
+  yapabilir: fikir alışverişi, tartışma, öneri isteme.
+- Her üyenin kişiliği, uzmanlık alanı ve bilgi seviyesi kendi FM profilinden türetilir.
+- Ekip üyeleri geçmiş konuşmaları ve kendi önceki görüşlerini hatırlar.
+- Yukarıdaki "itaatkâr değil, objektif" kuralına tabidirler.
+
+### 3.7 Futbol ve FM27 bilgi tabanı
 - Modern futbol taktiği: pozisyonel oyun, pres tetikleyicileri, rest-defence, asimetrik
   yapılar, oyun kurma varyasyonları vb.
 - FM27 taktik motorunun nasıl çalıştığı (roller, talimatlar, verimlilik sistemi).
