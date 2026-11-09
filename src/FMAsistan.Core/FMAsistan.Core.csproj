@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Uygulamanın çekirdeği: oyun verisi modeli, eklenti çıktısını okuyan kaynak ve
+    deterministik analiz motoru. Oyuna ve BepInEx'e bağımlılığı yoktur; test edilebilir.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>FMAsistan.Core</RootNamespace>
+    <AssemblyName>FMAsistan.Core</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="FMAsistan.Core.Tests" />
+  </ItemGroup>
+</Project>

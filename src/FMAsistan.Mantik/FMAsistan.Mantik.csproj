@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Oyun içinde çalışan asıl mantık. Yükleyici (FMAsistan.Eklenti) bu DLL'i
+    %LOCALAPPDATA%\FMAsistan\eklenti\mantik klasöründen okur ve dosya değiştikçe
+    oyunu yeniden başlatmadan yeniden yükler. -p:Kur=true ile derleme sonrası oraya kopyalanır.
+  -->
+  <PropertyGroup>
+    <AssemblyName>FMAsistan.Mantik</AssemblyName>
+    <RootNamespace>FMAsistan.Mantik</RootNamespace>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="0Harmony"><HintPath>$(BepInExCore)\0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppInterop.Runtime"><HintPath>$(BepInExCore)\Il2CppInterop.Runtime.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppInterop.Common"><HintPath>$(BepInExCore)\Il2CppInterop.Common.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2Cppmscorlib"><HintPath>$(BepInExInterop)\Il2Cppmscorlib.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppSystem"><HintPath>$(BepInExInterop)\Il2CppSystem.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(BepInExInterop)\UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UIElementsModule"><HintPath>$(BepInExInterop)\UnityEngine.UIElementsModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="FM.GamePlugin"><HintPath>$(BepInExInterop)\FM.GamePlugin.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="FM.UI"><HintPath>$(BepInExInterop)\FM.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="SI.Core"><HintPath>$(BepInExInterop)\SI.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="SI.Interop"><HintPath>$(BepInExInterop)\SI.Interop.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="SI.Bindable"><HintPath>$(BepInExInterop)\SI.Bindable.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="SI.Bindable.Reference.Core"><HintPath>$(BepInExInterop)\SI.Bindable.Reference.Core.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <Target Name="KopyalaMantik" AfterTargets="Build" Condition="'$(Kur)' == 'true'">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(FMAsistanData)\mantik" />
+  </Target>
+</Project>

@@ -1,7 +1,8 @@
 # FM Asistanım — Proje Planı
 
-> Durum: Bellek okuma yöntemi gerçek kayıt dosyasında doğrulandı, uygulama geliştirmeye başlanmadı.
-> Son güncelleme: 2026-11-09
+> Durum: Veri hattı (oyun içi eklenti), analiz motoru, yapay zekâ sohbeti ve bilgi tabanı
+> çalışıyor; masaüstü arayüzü henüz yok (geliştirme konsolu var).
+> Son güncelleme: 2026-11-10
 
 ## 1. Amaç
 
@@ -184,9 +185,101 @@ ekranlarıyla karşılaştırdı: **hepsi tutuyor.**
 - FM27 resmi çıkışı 10 Kasım 2026. İlk gün yaması alan konumlarını kaydırabilir. Çekirdeği
   alırsak FMSuperScout'taki yama düzeltmelerini takip edip kendimize aktarmamız gerekir.
 
+#### 4.1.2 Taktik, antrenman, gözlemci ve maç verisine erişim (2026-11-09)
+
+**BepInEx (oyun içi eklenti) şu an çalışmıyor:** Game Pass sürümü korumalı
+`C:\Program Files\WindowsApps\...` klasöründen çalışıyor. BepInEx dosyaları orada olsa da
+`fm.exe` içine yüklenmiyor: modül listesinde yok ve hiç log yazmamış. Aynı BepInEx, eski Steam
+kurulumunda (29 Ekim - 1 Kasım) çalışmıştı. Yani oyun içi yol Game Pass'te belirsiz, Steam'de
+mümkün. "FM Asistanım'ı oyun klasörüne kurmak" tek başına bir şey kazandırmaz. Önemli olan
+kodun oyun işleminin içinde çalışması, bu da BepInEx gibi bir yükleyici gerektirir.
+
+**Dışarıdan okuma ile uygulanabilirlik testi başarılı:** `game_plugin.dll` içindeki RTTI tür
+adlarından sanal tabloları bulup belleği taradık. DLL korumalı/paketlenmiş (bölüm adları
+`.text1`, `.trace`, `.sdata`...) ama RTTI bilgisi duruyor. Bulunan nesneler:
+
+| Sınıf | Bellekteki nesne | Ne için |
+|---|---|---|
+| `TACTICS_MANAGER` | 1 (tekil) | Kendi taktiğimiz, taktik yönetimi |
+| `GAME_TACTIC_INFO` | 26 | Taktik kayıtları (bizim ve muhtemelen diğer takımların) |
+| `TRAINING_MANAGER` | 1 (tekil) | Antrenman programı |
+| `SCOUT_MANAGER` | 1 (tekil) | Gözlemci görevleri |
+| `GAME_SCOUTED_PERSON` | 1 | Gözlemlenen oyuncular (gerçekçilik kuralı için) |
+| `SCOUTED_TEAM_INFO` | 2 | Gözlemlenen takımlar (rakip analizi) |
+| `MATCH_STATS_MANAGER`, `PLAYER_STATS_MANAGER` | 1 + 1 | İstatistik yönetimi |
+| `GAME_MATCH_PLAYER_STATS` | 5.000+ | Oyuncu başına maç istatistikleri |
+
+Ayrıca her oyun ekranının veri sunucusu var (`TACTIC_UI_HANDLER_SERVER`,
+`TEAM_TRAINING_UI_HANDLER_SERVER`, `SCOUTING_INFO_UI_HANDLER_SERVER`,
+`MATCH_STATS_UI_HANDLER_SERVER` vb.). Asistanın oyun içi tavsiyeleri de ayrı sınıflar
+(`backroom_advice_tactical_topics`, `backroom_advice_training_topics`).
+
+**Güncelleme (2026-11-10): BepInEx Game Pass'te çalıştırıldı.**
+- Neden: Game Pass çalışma zamanı (GDK), `winhttp.dll`'yi Unity'den önce System32'den
+  yüklüyor. Windows zaten yüklü modülü tekrar kullandığı için oyun klasöründeki Doorstop
+  vekili (`winhttp.dll`) hiç devreye girmiyordu. Eski kurulumun `doorstop_config.ini` dosyası
+  da Mono için ayarlanmıştı (`BepInEx.Preloader.dll`), IL2CPP için yanlıştı.
+- Çözüm: Eski kurulumlar temizlendi, BepInEx 6.0.0-be.791 (Unity IL2CPP, win-x64) temiz
+  kuruldu ve Doorstop vekili **`dxgi.dll`** adıyla konuldu. Doorstop 4.6 bu adı destekliyor,
+  UnityPlayer da `dxgi.dll`'yi statik olarak içe aktarıyor.
+- Sonuç: Vekil oyun klasöründen yüklendi. .NET çalışma zamanı ve BepInEx oyun işleminin
+  içinde çalıştı, arayüz derlemeleri (interop) üretildi, eklenti yükleyicisi hatasız başladı.
+  Oyun klasörüne yazma da çalışıyor.
+- Geri alma: `Content\dxgi.dll` dosyasını silmek BepInEx'i devre dışı bırakır.
+
+Bu yolla oyun içi okuma artık mümkün. Oyunun ekran veri sunucularından (`*_UI_HANDLER_SERVER`)
+veya Unity tarafındaki nesnelerden taktik, antrenman ve gözlem verisi doğrudan alınabilir.
+
+**Karar önerisi:** Dışarıdan okuma ile devam. Oyuna dokunmuyor, Game Pass'te çalışıyor ve
+FMSuperScout çekirdeğiyle aynı yöntem. Her yapının alanları "ham blok + oyun ekranı"
+yöntemiyle tek tek çözülecek. İlk hedef `TACTICS_MANAGER` → kendi taktiğimiz. BepInEx yolu
+yedek olarak kalır (Steam sürümüne geçilirse ya da Game Pass'te yükletilebilirse).
+
 **Ön karar:** FMSuperScout'un okuma çekirdeği (MIT, lisans metni korunarak) temel alınacak.
 Bu, teknoloji yığınını **C# / .NET** yönüne çekiyor. Eksik veriler (yukarıdaki sağ sütun) aynı
 yöntemle ya da gerekirse oyun içi BepInEx eklentisiyle Unity tarafından okunacak.
+
+#### 4.1.3 Oyun içi veri sistemi ve eklenti mimarisi (2026-11-10)
+
+**Teknik Oda eklentisinin incelemesi (kullanıcı onayıyla, yerel kod çözme):**
+- İki parça: küçük bir BepInEx yükleyicisi (`TeknikOda.Eklenti.dll`) ve asıl mantık
+  (`TeknikOda.Mantik.dll`). Yükleyici mantık DLL'ini her 0,5 sn'de kontrol edip değiştiyse
+  **oyunu yeniden başlatmadan** yeniden yüklüyor.
+- Masaüstü uygulamasıyla `%LOCALAPPDATA%\TeknikOda\eklenti` klasöründeki "*.flag" ve JSON
+  dosyalarıyla haberleşiyor.
+- Veriyi oyunun **arayüz veri bağlama sisteminden** (SI.Bindable) alıyor:
+  `GameSubsystems.Get<BindingSubsystem>()` ile veri ağacı, `BindingUtils.Request(ağaç,
+  kaynak, "Club.Name", ...)` ile metin yoluyla istek. Kaynak, veritabanı kimliğinden kurulan
+  `PersonReference` / `TeamReference`. Yani arayüzün gösterebildiği her veri, metin yoluyla
+  istenebiliyor.
+- Keşif yöntemi: Arayüzün tüm veri istekleri `GameInteropSubsystem.OpenChannel` üzerinden
+  native tarafa gidiyor. Bu metoda Harmony ile dinleyici takılıp, kullanıcı bir ekranı açınca
+  o ekranın istediği tüm veri yolları kaydediliyor.
+
+**Bizim eklentimiz (kendi kodumuz, aynı mimari):** `src/`
+- `FMAsistan.Eklenti`: BepInEx yükleyicisi, `BepInEx\plugins\FMAsistan` içinde.
+- `FMAsistan.Mantik`: asıl mantık, `%LOCALAPPDATA%\FMAsistan\eklenti\mantik` içinde, canlı
+  yeniden yüklenir.
+- İletişim: `%LOCALAPPDATA%\FMAsistan\eklenti` (flag/JSON dosyaları, `kalp.json` canlılık).
+- v1 özelliği: **Dinleyici** (`dinle.flag` → `dinle/<zaman>-ozet.json`). Taktik, antrenman
+  ve rakip ekranlarının veri yollarını keşfetmek için.
+- Derleme: `dotnet build src/FMAsistan.Mantik -c Release -p:Kur=true` (oyun açıkken de olur).
+
+**Hedef mimari:**
+
+```
+FM27 (oyun)  ──  FMAsistan.Mantik (oyun içinde, BepInEx)
+                   │  veri: kadro, teknik ekip, taktik, antrenman, rakip, gözlem bilgisi
+                   ▼  %LOCALAPPDATA%\FMAsistan (JSON)
+FM Asistanım masaüstü uygulaması (C# / .NET)
+  ├─ Veri katmanı: oyun verisi + teknik ekip bilgi süzgeci (gerçekçilik kuralı)
+  ├─ Analiz motoru (deterministik): rol uyumu, taktik kontrolleri, Moneyball skorları
+  ├─ Yapay zekâ katmanı: teknik ekip üyeleriyle sohbet (`claude -p`, kurulu)
+  └─ Arayüz
+```
+
+FMSuperScout tabanlı dışarıdan okuma, eklenti verisi doğrulanana kadar yedek ve çapraz
+kontrol olarak kalır.
 
 ### 4.2 Yapay zekâ gerekli mi?
 Değerlendirme: **Evet, ama tek başına değil.**
@@ -206,6 +299,18 @@ Entegrasyon seçenekleri:
 
 Ön öneri: Seçenek 1 (Claude Code entegrasyonu). Mimari, gerekirse API'ye geçilebilecek
 şekilde soyutlanacak.
+
+**Uygulandı (2026-11-10):** `FMAsistan.Core/Yz`.
+- `IYapayZeka` arayüzü + `ClaudeCodeCli` (kurulu Claude Code 2.1.319, `claude -p
+  --output-format json --tools "" --strict-mcp-config --model claude-opus-5-5`). Araçlar
+  kapalı: model yalnızca metin üretir. Sohbet `--resume <oturum>` ile sürer.
+- `EkipPersonasi`: sistem talimatı ekip üyesinin oyun verisinden kurulur (felsefe:
+  `PersonReference.PreferredFormationString/Mentality/Pressing/Marking`; nitelikler: taktik
+  bilgisi, değerlendirme, otorite, motivasyon...). İçinde objektiflik kuralları, analiz
+  motorunun bulguları ve bilgi tabanı var. Deterministik (önbelleğe uygun).
+- İlk gerçek test: Jim Fraser'a bilerek tartışmalı bir öneri (presi sonuna kadar aç + ekstra
+  talimat) sunuldu. Kendi felsefesine yakın olduğunu söyleyip veriye dayanarak (K-01, K-03)
+  karşı çıktı, haklı tarafı (K-07) teslim etti, bilmediğini (rakip raporu içeriği) açıkça söyledi.
 
 ### 4.3 Platform
 Windows masaüstü (kullanıcının bilgisayarı). Kesin teknoloji yığını, veri alma yöntemi
@@ -238,14 +343,33 @@ FM26'ya ait olanlar da geçerli, çünkü kullanıcıya göre taktik sistemi de�
 16. https://youtu.be/cdGSnUsoUdo
 17. https://youtu.be/sbJyQszXSMM
 
-## 6. Sıradaki Adımlar
+## 6. Mevcut Durum ve Sıradaki Adımlar
 
-1. ~~Bellek okuma yöntemini doğrulamak~~ (tamamlandı, bkz. 4.1.1).
-2. Gözlemci bilgisinin (hangi oyuncu ne kadar tanınıyor) bellekte nerede tutulduğunu
-   araştırmak.
-3. Taktik ve antrenman verisinin bellekte (yerel C++ veya Unity tarafında) yerini araştırmak.
-4. Oyunun sterlin/euro kurunu bellekten okumanın yolunu bulmak.
-5. Bilgisayarda Claude Code kurulu mu, hangi abonelik var? Yapay zekâ entegrasyonunu
-   kesinleştirmek.
-6. Video transkriptlerine erişimi denemek ve bilgi tabanının yapısını belirlemek.
-7. Teknoloji yığınını (C# / .NET yönünde) kesinleştirip proje iskeletini kurmak.
+### Tamamlananlar (2026-11-10)
+- Bellek okuma doğrulandı (4.1.1); BepInEx Game Pass'te çalıştırıldı (4.1.2).
+- Oyun içi eklenti (`src/FMAsistan.Eklenti` + canlı yenilenen `src/FMAsistan.Mantik` v3):
+  dinleyici (ekran veri yolları), okuyucu (istenen özellikleri okur), pasif gözlem (ekranda
+  görünen her değeri kaydeder). Veri yolları: `docs/VERI_YOLLARI.md`.
+- Gerçekçilik için kritik bulgu: oyun öznitelikleri **gösterdiği aralıkla** veriyor
+  (`AttributeMinValue/MaxValue`) ve verimlilik puanlarında `UsesRange` var. Ekip bilgisi
+  süzgeci oyunun gösterdiğini kullanacak, gerçek değeri değil.
+- Çekirdek (`src/FMAsistan.Core`): veri modeli, eklenti çözücü (okumaları birleştirir), taktik
+  analiz motoru (K-01, K-03..K-09), yapay zekâ katmanı. 12 test (`src/FMAsistan.Core.Tests`),
+  gerçek kariyer verisiyle.
+- Geliştirme konsolu (`src/FMAsistan.Konsol`): `analiz`, `sohbet`, `sor`.
+- Bilgi tabanı: 17 videonun tamamı işlendi (`bilgi/TAKTIK_BILGI_TABANI.md`).
+- Teknoloji yığını: C# / .NET 8 (uygulama), .NET 6 (BepInEx eklentisi).
+
+### Sıradaki adımlar
+1. **Gözlem oturumu (kullanıcıyla):** taktik ve antrenman ekranları açıkken pasif gözlem;
+   rol adları, haftalık program ve bağlam isteyen alanlar.
+2. **Anlık görüntü komutu:** eklentinin uygulamanın ihtiyaç duyduğu her şeyi (takım, kadro,
+   teknik ekip, taktik, verimlilik, sıradaki rakip raporu) tek seferde üretmesi; ekip profilleri
+   (şu an elle yazılmış `ornekler/ekip/jim-fraser.json`) otomatik oluşsun.
+3. **Rakip raporunu ekibin önüne koymak** (Jim'in "bilmiyoruz" dediği eksik).
+4. **Rol çözümü:** IP/OOP rol kodlarının adları → rol çakışması (K-22), oyun kurmayı öldüren
+   roller (K-25), dinlenme savunması (K-12) kuralları.
+5. **Antrenman planlayıcı:** zayıf alanlara göre aylık program (özellik 3.3).
+6. **Masaüstü arayüzü** (analiz departmanı görünümü + ekip sohbeti).
+7. Moneyball modülü (3.4) ve ekip bilgi süzgeci (3.5).
+8. Oyunun sterlin/euro kuru (maaşlar euro/yıllık gösterilecek).

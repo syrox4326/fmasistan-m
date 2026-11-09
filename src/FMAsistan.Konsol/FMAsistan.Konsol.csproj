@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Geçici geliştirme arayüzü: zinciri (eklenti verisi → analiz → yapay zekâ) uçtan uca dener. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>fmasistan</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FMAsistan.Core\FMAsistan.Core.csproj" />
+  </ItemGroup>
+</Project>

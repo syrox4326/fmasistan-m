@@ -1,0 +1,25 @@
+<Project>
+  <!--
+    Ortak derleme ayarları. FMDir, BepInEx'in kurulu olduğu oyun klasörüdür.
+    Başka bir klasör için: dotnet build -p:FMDir="D:\Oyun\Football Manager 27"
+  -->
+  <PropertyGroup>
+    <FMDir Condition="'$(FMDir)' == ''">C:\XboxGames\Football Manager 27\Content</FMDir>
+    <BepInExCore>$(FMDir)\BepInEx\core</BepInExCore>
+    <BepInExInterop>$(FMDir)\BepInEx\interop</BepInExInterop>
+    <FMAsistanData>$(FMDir)\BepInEx\FMAsistan</FMAsistanData>
+    <LangVersion>latest</LangVersion>
+    <DebugType>none</DebugType>
+    <IsEklenti Condition="'$(MSBuildProjectName)' == 'FMAsistan.Eklenti' Or '$(MSBuildProjectName)' == 'FMAsistan.Mantik'">true</IsEklenti>
+  </PropertyGroup>
+
+  <!-- Oyun içi eklentiler: BepInEx'in .NET 6 çalışma zamanına göre, oyunun DLL'lerine referansla. -->
+  <PropertyGroup Condition="'$(IsEklenti)' == 'true'">
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+</Project>

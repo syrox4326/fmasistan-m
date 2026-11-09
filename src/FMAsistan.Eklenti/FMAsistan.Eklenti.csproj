@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    BepInEx yükleyicisi. Oyunla birlikte bir kez yüklenir; asıl mantığı
+    (FMAsistan.Mantik.dll) dosya değiştikçe oyunu yeniden başlatmadan yeniden yükler.
+    Derleme sonrası BepInEx\plugins\FMAsistan klasörüne kopyalanır (FM kapalıyken).
+  -->
+  <PropertyGroup>
+    <AssemblyName>FMAsistan.Eklenti</AssemblyName>
+    <RootNamespace>FMAsistan.Eklenti</RootNamespace>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx.Core"><HintPath>$(BepInExCore)\BepInEx.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="BepInEx.Unity.IL2CPP"><HintPath>$(BepInExCore)\BepInEx.Unity.IL2CPP.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppInterop.Runtime"><HintPath>$(BepInExCore)\Il2CppInterop.Runtime.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2Cppmscorlib"><HintPath>$(BepInExInterop)\Il2Cppmscorlib.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(BepInExInterop)\UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <Target Name="KopyalaEklenti" AfterTargets="Build" Condition="'$(Kur)' == 'true'">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(FMDir)\BepInEx\plugins\FMAsistan" />
+  </Target>
+</Project>

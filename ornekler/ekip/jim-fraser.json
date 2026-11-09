@@ -1,0 +1,22 @@
+{
+  "_kaynak": "FM27 kariyeri, 2026-11-10. Felsefe ve lisans oyun içi eklentiden (PersonReference.Preferred*, CoachingBadges), nitelikler bellek okuyucudan (oyun ekranıyla doğrulandı). İleride eklenti otomatik üretecek.",
+  "kimlik": "PersonReference:16785153",
+  "ad": "Jim Fraser",
+  "gorev": "Asistan Menajer",
+  "dizilis": "4-3-3 DOS Geniş",
+  "mentalite": "Riskli",
+  "pres": "Çok şiddetli",
+  "markaj": "Alan",
+  "lisans": "Uluslararası Pro Lisansı",
+  "nitelikler": {
+    "taktikBilgisi": 16,
+    "yetenekDegerlendirme": 19,
+    "potansiyelDegerlendirme": 18,
+    "otorite": 7,
+    "motivasyon": 20,
+    "adamYonetimi": 15,
+    "kararlilik": 16,
+    "uyum": 17,
+    "veriAnalizi": 6
+  }
+}
