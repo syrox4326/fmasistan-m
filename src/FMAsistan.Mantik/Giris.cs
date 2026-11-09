@@ -14,7 +14,7 @@ namespace FMAsistan.Mantik
     /// </summary>
     public static class Giris
     {
-        public const string Surum = "3";
+        public const string Surum = "4";
 
         /// <summary>İletişim klasörü; yükleyici verir (oyun klasöründe BepInEx\FMAsistan\veri).</summary>
         internal static string Klasor { get; private set; }

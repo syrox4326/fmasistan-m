@@ -95,6 +95,12 @@ public static class EkipPersonasi
             s.AppendLine($"- Taktiksel verimlilik (0-100): genel {v.Genel}; oyuncu yeteneği {v.Yetenek.Genel} (yeterlilik {v.Yetenek.Yeterlilik}, rol uygunluğu {v.Yetenek.RolUygunlugu}); benimseme {v.Benimseme.Genel}; taktik anlayışı {v.Anlayis.Genel}" + (v.MacBilgisi != null ? $"; sonraki maç bilgisi {v.MacBilgisi.Genel}" : ""));
             s.AppendLine("- Taktik alanları: " + string.Join(", ", v.Anlayis.Alanlar.OrderBy(a => a.Value.Orta).Select(a => $"{TaktikAnalizi.AlanAdi(a.Key)} {a.Value}")));
             s.AppendLine($"- Karmaşıklık {v.Anlayis.Karmasiklik}, kavrayış {v.Anlayis.Kavrayis}");
+            if (durum.Dizilis.Count > 0)
+            {
+                s.AppendLine("- İlk 11 (topa sahipken → top rakipteyken):");
+                foreach (var p in durum.Dizilis)
+                    s.AppendLine($"  - {p.Ad ?? p.OyuncuKimlik}: {Pozisyon.Ad(p.IpPozisyon)}, {p.IpRolu?.Ad ?? "?"} → {Pozisyon.Ad(p.OopPozisyon)}, {p.OopRolu?.Ad ?? "?"}");
+            }
             foreach (var u in durum.Uyarilar) s.AppendLine($"- Oyun uyarısı: {u}");
             s.AppendLine();
         }

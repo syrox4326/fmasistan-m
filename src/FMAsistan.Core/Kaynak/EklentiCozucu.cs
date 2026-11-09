@@ -86,6 +86,18 @@ public static class EklentiCozucu
             }
         }
 
+        var dizilis = new List<TaktikPozisyonu>();
+        if (Alan(taktik, "TacticalPositionsCombined") is { ValueKind: JsonValueKind.Array } poz)
+        {
+            foreach (var p in poz.EnumerateArray())
+            {
+                string kimlik = Metin(p, "Person") ?? Metin(p, "Player") ?? "?";
+                string? ad = adlar != null && adlar.TryGetValue(kimlik, out var a) ? a : null;
+                dizilis.Add(new TaktikPozisyonu(kimlik, ad,
+                    Sayi(p, "IPPosition"), Sayi(p, "IPRole"), Sayi(p, "OOPPosition"), Sayi(p, "OOPRole")));
+            }
+        }
+
         var uyarilar = new List<string>();
         if (te.TryGetProperty("StatusFlags", out var bayraklar) && bayraklar.ValueKind == JsonValueKind.Object)
             foreach (var b in bayraklar.EnumerateObject())
@@ -100,7 +112,17 @@ public static class EklentiCozucu
                 Metin(takim, "MostUsedFormation")),
             Verimlilik(te),
             oyuncular,
-            uyarilar);
+            uyarilar,
+            dizilis);
+    }
+
+    /// <summary>Rol/pozisyon kimlikleri 2^53'ü aşabilir; double'a çevirmeden okunur.</summary>
+    private static ulong Sayi(JsonElement e, string ad)
+    {
+        if (!e.TryGetProperty(ad, out var v) || v.ValueKind != JsonValueKind.Number) return 0;
+        if (v.TryGetUInt64(out var u)) return u;
+        if (v.TryGetInt64(out var l)) return unchecked((ulong)l);
+        return (ulong)v.GetDouble();
     }
 
     // --- Verimlilik ---

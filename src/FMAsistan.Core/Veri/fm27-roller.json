@@ -1,0 +1,756 @@
+{
+ "_kaynak": "FM 27.0.0.2493426, PersonReference.PositionalAbilitiesRoleTable (PositionMask + InPossession bağlamı), 2026-11-10",
+ "roller": [
+  {
+   "faz": "IP",
+   "id": "1",
+   "ad": "Kaleci",
+   "kisa": "KL",
+   "pozisyonMaskeleri": [
+    1
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "2",
+   "ad": "Stoper",
+   "kisa": "S",
+   "pozisyonMaskeleri": [
+    16
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "4",
+   "ad": "Bek",
+   "kisa": "SB",
+   "pozisyonMaskeleri": [
+    4,
+    8
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "8",
+   "ad": "Kanat Bek",
+   "kisa": "KB",
+   "pozisyonMaskeleri": [
+    4,
+    8,
+    32,
+    64
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "16",
+   "ad": "Defansif Orta Saha",
+   "kisa": "DOS",
+   "pozisyonMaskeleri": [
+    128
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "32",
+   "ad": "Merkez Orta Saha",
+   "kisa": "MO",
+   "pozisyonMaskeleri": [
+    1024
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "64",
+   "ad": "Kanat Orta Saha",
+   "kisa": "OKO",
+   "pozisyonMaskeleri": [
+    256,
+    512
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "128",
+   "ad": "Kanat Oyuncusu",
+   "kisa": "KN",
+   "pozisyonMaskeleri": [
+    256,
+    512,
+    2048,
+    4096
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "512",
+   "ad": "Ofansif Orta Saha",
+   "kisa": "OOS",
+   "pozisyonMaskeleri": [
+    1024,
+    8192
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "1024",
+   "ad": "Yardımcı Forvet",
+   "kisa": "YF",
+   "pozisyonMaskeleri": [
+    16384
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "2048",
+   "ad": "Merkez Forvet",
+   "kisa": "MF",
+   "pozisyonMaskeleri": [
+    16384
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "4096",
+   "ad": "Ayağı İyi Kaleci",
+   "kisa": "AİK",
+   "pozisyonMaskeleri": [
+    1
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "16384",
+   "ad": "Topla Çıkan Stoper",
+   "kisa": "TÇS",
+   "pozisyonMaskeleri": [
+    16
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "32768",
+   "ad": "Derin Oyun Kurucu",
+   "kisa": "DOK",
+   "pozisyonMaskeleri": [
+    128
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "65536",
+   "ad": "İki Yönlü Orta Saha",
+   "kisa": "İYO",
+   "pozisyonMaskeleri": [
+    128
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "131072",
+   "ad": "Ofansif Oyun Kurucu",
+   "kisa": "OOK",
+   "pozisyonMaskeleri": [
+    1024,
+    8192
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "262144",
+   "ad": "Pivot Santrafor",
+   "kisa": "PS",
+   "pozisyonMaskeleri": [
+    16384
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "524288",
+   "ad": "Fırsatçı Oyuncu",
+   "kisa": "FG",
+   "pozisyonMaskeleri": [
+    16384
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "16777216",
+   "ad": "Ayağı İyi Stoper",
+   "kisa": "AİS",
+   "pozisyonMaskeleri": [
+    16
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "134217728",
+   "ad": "Kanat Forvet",
+   "kisa": "KF",
+   "pozisyonMaskeleri": [
+    2048,
+    4096
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "536870912",
+   "ad": "Çakılı Stoper",
+   "kisa": "ÇS",
+   "pozisyonMaskeleri": [
+    16
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "2147483648",
+   "ad": "İç Forvet",
+   "kisa": "İF",
+   "pozisyonMaskeleri": [
+    16384
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "4294967296",
+   "ad": "Serbest Oyuncu",
+   "kisa": "SRB",
+   "pozisyonMaskeleri": [
+    8192
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "34359738368",
+   "ad": "Gizli Libero",
+   "kisa": "GL",
+   "pozisyonMaskeleri": [
+    128
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "274877906944",
+   "ad": "Ofansif Bek",
+   "kisa": "OB",
+   "pozisyonMaskeleri": [
+    32,
+    64
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "1099511627776",
+   "ad": "Sahte 9",
+   "kisa": "SF",
+   "pozisyonMaskeleri": [
+    16384
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "2199023255552",
+   "ad": "İkinci Forvet",
+   "kisa": "GF",
+   "pozisyonMaskeleri": [
+    8192
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "8796093022208",
+   "ad": "Oyun Kurucu Kanat",
+   "kisa": "OKK",
+   "pozisyonMaskeleri": [
+    256,
+    512,
+    2048,
+    4096
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "17592186044416",
+   "ad": "İç Koridorda Oynayan Kanat Bek",
+   "kisa": "İKB",
+   "pozisyonMaskeleri": [
+    4,
+    8,
+    32,
+    64
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "35184372088832",
+   "ad": "Dış Kanat Forvet",
+   "kisa": "DKF",
+   "pozisyonMaskeleri": [
+    2048,
+    4096
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "70368744177664",
+   "ad": "İki Yönlü Oyun Kurucu",
+   "kisa": "İOK",
+   "pozisyonMaskeleri": [
+    128
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "281474976710656",
+   "ad": "Geniş Alanda Oynayan Merkez Orta Saha",
+   "kisa": "GMO",
+   "pozisyonMaskeleri": [
+    1024
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "562949953421312",
+   "ad": "İç Kanat Oyuncusu",
+   "kisa": "İKO",
+   "pozisyonMaskeleri": [
+    256,
+    512,
+    2048,
+    4096
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "2251799813685248",
+   "ad": "Kenar Stoper",
+   "kisa": "KS",
+   "pozisyonMaskeleri": [
+    16
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "4503599627370496",
+   "ad": "Stoperleşen Bek",
+   "kisa": "STB",
+   "pozisyonMaskeleri": [
+    4,
+    8
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "9007199254740992",
+   "ad": "Risksiz Oynayan Kaleci",
+   "kisa": "RK",
+   "pozisyonMaskeleri": [
+    1
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "18014398509481984",
+   "ad": "Çizgiden Bindiren Stoper",
+   "kisa": "ÇBS",
+   "pozisyonMaskeleri": [
+    16
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "36028797018963968",
+   "ad": "Oyun Kurucu Kanat Bek",
+   "kisa": "OKB",
+   "pozisyonMaskeleri": [
+    4,
+    8,
+    32,
+    64
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "72057594037927936",
+   "ad": "İç Merkez Orta Saha",
+   "kisa": "İMO",
+   "pozisyonMaskeleri": [
+    1024,
+    8192
+   ]
+  },
+  {
+   "faz": "IP",
+   "id": "144115188075855872",
+   "ad": "Oyun Kurucu Orta Saha",
+   "kisa": "OKO",
+   "pozisyonMaskeleri": [
+    1024
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "1",
+   "ad": "Kaleci",
+   "kisa": "KL",
+   "pozisyonMaskeleri": [
+    1
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "2",
+   "ad": "Libero Kaleci",
+   "kisa": "LK",
+   "pozisyonMaskeleri": [
+    1
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "4",
+   "ad": "Çizgi Kalecisi",
+   "kisa": "ÇK",
+   "pozisyonMaskeleri": [
+    1
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "8",
+   "ad": "Stoper",
+   "kisa": "S",
+   "pozisyonMaskeleri": [
+    16
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "16",
+   "ad": "Kesici Stoper",
+   "kisa": "KSC",
+   "pozisyonMaskeleri": [
+    16
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "32",
+   "ad": "Alan Savunan Stoper",
+   "kisa": "ALS",
+   "pozisyonMaskeleri": [
+    16
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "64",
+   "ad": "Kenar Stoper",
+   "kisa": "KS",
+   "pozisyonMaskeleri": [
+    16
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "128",
+   "ad": "Dar Alanda Oynayan Stoper",
+   "kisa": "DOS",
+   "pozisyonMaskeleri": [
+    16
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "256",
+   "ad": "Geniş Alanda Oynayan Stoper",
+   "kisa": "GOS",
+   "pozisyonMaskeleri": [
+    16
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "512",
+   "ad": "Bek",
+   "kisa": "SB",
+   "pozisyonMaskeleri": [
+    4,
+    8
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "1024",
+   "ad": "Presçi Bek",
+   "kisa": "PB",
+   "pozisyonMaskeleri": [
+    4,
+    8
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "2048",
+   "ad": "Alan Savunan Bek",
+   "kisa": "ASB",
+   "pozisyonMaskeleri": [
+    4,
+    8
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "4096",
+   "ad": "Kanat Bek",
+   "kisa": "KB",
+   "pozisyonMaskeleri": [
+    32,
+    64
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "8192",
+   "ad": "Presçi Kanat Bek",
+   "kisa": "PKB",
+   "pozisyonMaskeleri": [
+    32,
+    64
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "16384",
+   "ad": "Alan Savunan Kanat Bek",
+   "kisa": "ASK",
+   "pozisyonMaskeleri": [
+    32,
+    64
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "32768",
+   "ad": "Defansif Orta Saha",
+   "kisa": "DOS",
+   "pozisyonMaskeleri": [
+    128
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "65536",
+   "ad": "İçeri Sarkan Defansif Orta Saha",
+   "kisa": "İSD",
+   "pozisyonMaskeleri": [
+    128
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "131072",
+   "ad": "Presçi Defansif Orta Saha",
+   "kisa": "PDO",
+   "pozisyonMaskeleri": [
+    128
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "262144",
+   "ad": "Karşılayıcı Defansif Orta Saha",
+   "kisa": "KDO",
+   "pozisyonMaskeleri": [
+    128
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "524288",
+   "ad": "Geniş Alanda Oynayan Defansif Orta Saha",
+   "kisa": "GAD",
+   "pozisyonMaskeleri": [
+    128
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "1048576",
+   "ad": "Merkez Orta Saha",
+   "kisa": "MOS",
+   "pozisyonMaskeleri": [
+    1024
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "134217728",
+   "ad": "Presçi Merkez Orta Saha",
+   "kisa": "PMO",
+   "pozisyonMaskeleri": [
+    1024
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "268435456",
+   "ad": "Markajcı Merkez Orta Saha",
+   "kisa": "MMO",
+   "pozisyonMaskeleri": [
+    1024
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "536870912",
+   "ad": "Geniş Bölgede Oynayan Merkez Orta Saha",
+   "kisa": "GBM",
+   "pozisyonMaskeleri": [
+    1024
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "1073741824",
+   "ad": "Ofansif Orta Saha",
+   "kisa": "OOS",
+   "pozisyonMaskeleri": [
+    8192
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "2147483648",
+   "ad": "Takipçi Ofansif Orta Saha",
+   "kisa": "TOO",
+   "pozisyonMaskeleri": [
+    8192
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "4294967296",
+   "ad": "Pres Kırıcı Merkez Ofansif Orta Saha",
+   "kisa": "PKO",
+   "pozisyonMaskeleri": [
+    8192
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "8589934592",
+   "ad": "Hareketli Ofansif Orta Saha",
+   "kisa": "HOO",
+   "pozisyonMaskeleri": [
+    8192
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "34359738368",
+   "ad": "Dış Kanat Orta Saha",
+   "kisa": "DKO",
+   "pozisyonMaskeleri": [
+    256,
+    512
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "68719476736",
+   "ad": "Çalışkan Dış Orta Saha",
+   "kisa": "ÇDO",
+   "pozisyonMaskeleri": [
+    256,
+    512
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "137438953472",
+   "ad": "Pres Kırıcı Dış Orta Saha",
+   "kisa": "PKD",
+   "pozisyonMaskeleri": [
+    256,
+    512
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "274877906944",
+   "ad": "Kanat Oyuncusu",
+   "kisa": "KN",
+   "pozisyonMaskeleri": [
+    2048,
+    4096
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "549755813888",
+   "ad": "Takipçi Kanat",
+   "kisa": "TK",
+   "pozisyonMaskeleri": [
+    2048,
+    4096
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "1099511627776",
+   "ad": "İç Koridorda Bekleyen Kanat",
+   "kisa": "İKK",
+   "pozisyonMaskeleri": [
+    2048,
+    4096
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "2199023255552",
+   "ad": "Hareketli Kanat Oyuncusu",
+   "kisa": "HKO",
+   "pozisyonMaskeleri": [
+    2048,
+    4096
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "4398046511104",
+   "ad": "Merkez Forvet",
+   "kisa": "MF",
+   "pozisyonMaskeleri": [
+    16384
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "8796093022208",
+   "ad": "Takipçi Forvet",
+   "kisa": "TF",
+   "pozisyonMaskeleri": [
+    16384
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "17592186044416",
+   "ad": "Bağlantı Oyuncusu",
+   "kisa": "BAĞ",
+   "pozisyonMaskeleri": [
+    16384
+   ]
+  },
+  {
+   "faz": "OOP",
+   "id": "35184372088832",
+   "ad": "Hareketli Forvet",
+   "kisa": "HF",
+   "pozisyonMaskeleri": [
+    16384
+   ]
+  }
+ ]
+}

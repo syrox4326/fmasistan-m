@@ -61,9 +61,11 @@ public sealed record Felsefe(string? Dizilis, string? Mentalite, string? Pres, s
 public sealed record TeknikEkipUyesi(string Kimlik, string Ad, string Gorev, Felsefe Felsefe, string? Lisans);
 
 /// <summary>Analizin girdisi: oyundan okunan bir anlık görüntü.</summary>
+/// <param name="Dizilis">İlk 11'in iki fazdaki pozisyon ve rolleri; okunamadıysa boş.</param>
 public sealed record TakimDurumu(
     string TakimAdi,
     TaktikOzeti Taktik,
     Verimlilik TakimVerimliligi,
     IReadOnlyList<OyuncuVerimliligi> Oyuncular,
-    IReadOnlyList<string> Uyarilar);
+    IReadOnlyList<string> Uyarilar,
+    IReadOnlyList<TaktikPozisyonu> Dizilis);

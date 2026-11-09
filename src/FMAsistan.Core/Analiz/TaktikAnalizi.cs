@@ -46,6 +46,8 @@ public static class TaktikAnalizi
         BenimsemeBulgulari(v.Benimseme, b);
         OyuncuBulgulari(d.Oyuncular, b);
         MacBilgisiBulgulari(v.MacBilgisi, b);
+        RolCakismalari(d.Dizilis, b);
+        OyunKurmayiOldurenRoller(d.Dizilis, b);
 
         foreach (var u in d.Uyarilar)
             b.Add(new Bulgu("OYUN", Onem.Orta, "Oyunun uyarısı", u, new[] { "Taktik ekranı durum bayrağı" }, null));
@@ -159,6 +161,51 @@ public static class TaktikAnalizi
                     "Oyuncunun güçlü yönlerine uyan bir rol dene ya da bireysel antrenmanda bu rolü çalıştır."));
             }
         }
+    }
+
+    /// <summary>
+    /// K-22: Aynı kanatta oyun kurulumunda aynı alanı kullanan rol çiftleri (topa sahipken).
+    /// Bilgi tabanındaki iki çift: Kanat Oyuncusu + Kanat Bek, Dış Kanat Forvet + Kanat Bek.
+    /// </summary>
+    private static readonly (string onde, string arkada)[] CakisanCiftler =
+    {
+        ("Kanat Oyuncusu", "Kanat Bek"),
+        ("Dış Kanat Forvet", "Kanat Bek"),
+    };
+
+    private static void RolCakismalari(IReadOnlyList<TaktikPozisyonu> dizilis, List<Bulgu> b)
+    {
+        foreach (var kanat in new[] { Kanat.Sol, Kanat.Sag })
+        {
+            var buKanat = dizilis.Where(p => Pozisyon.KanatOf(p.IpPozisyon) == kanat && p.IpRolu != null).ToList();
+            foreach (var (onde, arkada) in CakisanCiftler)
+            {
+                var o = buKanat.FirstOrDefault(p => p.IpRolu!.Ad == onde);
+                var a = buKanat.FirstOrDefault(p => p.IpRolu!.Ad == arkada);
+                if (o == null || a == null) continue;
+                string k = kanat == Kanat.Sol ? "Sol" : "Sağ";
+                b.Add(new Bulgu("K-22", Onem.Orta,
+                    $"{k} kanatta rol çakışması: {onde} + {arkada}",
+                    "İki oyuncu oyun kurulumunda aynı geniş alanı kullanıyor; birbirlerinin alanını daraltır ve iç koridoru boş bırakır.",
+                    new[] { $"{o.Ad ?? o.OyuncuKimlik}: {Pozisyon.Ad(o.IpPozisyon)}, {onde}", $"{a.Ad ?? a.OyuncuKimlik}: {Pozisyon.Ad(a.IpPozisyon)}, {arkada}" },
+                    "Beki 'İç Koridorda Oynayan Kanat Bek' yap ya da yarım alanı dolduracak ileri bir orta saha rolü kullan."));
+            }
+        }
+    }
+
+    /// <summary>K-25: Risksiz oynayan kaleci + çakılı stoper → oyun kurulamaz, top dikine vurulur.</summary>
+    private static void OyunKurmayiOldurenRoller(IReadOnlyList<TaktikPozisyonu> dizilis, List<Bulgu> b)
+    {
+        var kaleci = dizilis.FirstOrDefault(p => p.IpRolu?.Ad == "Risksiz Oynayan Kaleci");
+        var stoperler = dizilis.Where(p => p.IpRolu?.Ad == "Çakılı Stoper").ToList();
+        if (kaleci == null || stoperler.Count == 0) return;
+        var kanit = new List<string> { $"{kaleci.Ad ?? kaleci.OyuncuKimlik}: Risksiz Oynayan Kaleci" };
+        kanit.AddRange(stoperler.Select(s => $"{s.Ad ?? s.OyuncuKimlik}: Çakılı Stoper"));
+        b.Add(new Bulgu("K-25", Onem.Yuksek,
+            "Bu rollerle geriden oyun kurulamaz",
+            "Risksiz oynayan kaleci ve çakılı stoper topu dikine uzaklaştırmaya meyillidir; hangi oyun kurulumunu seçersen seç kısa kurulum gerçekleşmez.",
+            kanit,
+            "Ayağı zayıf oyunculara odak rolü vermek istemiyorsan nötr 'Kaleci' ve 'Stoper' rollerini kullan."));
     }
 
     // K-09: Rakip raporu kalitesi (gerçekçilik: ekip kalitesine bağlı).

@@ -73,6 +73,35 @@ Her referans `(özellik kimliği, değer)` çiftlerinden oluşur. Örnekler:
 `AttributesCoaching`, `AttributesCoachingMental`, `BestTrainingCoachingCategory`,
 `CoachingBadges`, `JobType`, `ManagerReputation`
 
+## Bağlamlı istekler (2026-11-10)
+
+Bazı özellikler bağlam ister; okuyucu `"baglam": [{ "ad", "tur", "deger" }]` ile gönderir
+(`BindingUtils.BuildRequest(...).AddContext(...).Bind(...)`).
+
+- **Rol tablosu:** `PersonReference.PositionalAbilitiesRoleTable` + bağlam `team`
+  (TeamReference), `PositionMask` (DynamicNumber), `InPossession` (bool). Oyuncunun o pozisyon
+  ve fazdaki tüm rolleri: `TacticsRoleID`, `TacticsRoleName`, `ShortName`,
+  `CurrentAbilityStars` (aralıklı, `IsScoutsOpinion`). Yalnızca oyuncunun oynayabildiği
+  pozisyonlar dolar. Çıkarılan katalog: `src/FMAsistan.Core/Veri/fm27-roller.json`
+  (40 topa sahipken, 39 top rakipteyken rol). **Rol kimlikleri faza göre ayrı ad
+  alanlarıdır** (1024: IP Yardımcı Forvet, OOP Presçi Bek).
+- **Pozisyon maskeleri:** 1 KL, 4 sağ bek, 8 sol bek, 16 stoper, 32/64 kanat bek (sağ/sol,
+  çıkarım), 128 DOS, 256/512 sağ/sol orta saha, 1024 MO, 2048/4096 sağ/sol ofansif kanat,
+  8192 OOS, 16384 forvet; 2^20 sol iç, 2^21 sağ iç.
+
+## Pasif gözlemle gelenler (ekran açıkken)
+
+- `CalendarReference{Type=1}`: `TrainingScheduleWeeks`, `TrainingScheduleName`
+  ("Taktik Odağı - Top Rakipteyken"), `CurrentTrainingSession`, `DaysOverview`,
+  `TrainingSessionCategoryOnlyDropdown` (Taktiksel Anlayış / Maç Hazırlığı / Futbol Gelişimi),
+  `TrainingSessionsForCategoryDropdown` (Pas Stili, Oyun Kurma, Fırsat Yaratma, …, Pres Tuzağı).
+- `TeamTrainingReference`: `CoachAssignments`, `TrainingIntensities`, öznitelik grubu açıklamaları.
+- `TeamTacticReference`: `TacticalPositions` (Index, Position, PositionRole, IsInPossession),
+  `AvailableRolesDropdown` (seçili pozisyonun rolleri + yıldız), `KeyAttributesForRole`,
+  `FormationName` (top rakipteyken), takım talimatlarının seçili değerleri
+  (`DefensiveLine`, `LineOfEngagement`, `PressingTrigger`, `Tackling`...: PropertyID olarak).
+- `PersonReference`: `ScoutedBestRole`, `InPossessionRoleStarRangeForSquadPlannerSeason`.
+
 ## Sıradaki adım
 
 Dinleyicinin yakaladığı gerçek referans nesnelerini şablon olarak saklayıp bu özellikleri

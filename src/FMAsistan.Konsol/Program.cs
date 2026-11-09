@@ -78,7 +78,10 @@ TakimDurumu SonDurum()
     // Tüm okumalar eskiden yeniye birleştirilir (dosya adları zaman damgalı).
     var dosyalar = Directory.GetFiles(Path.Combine(veri, "oku"), "*.json").OrderBy(f => f).ToList();
     if (dosyalar.Count == 0) throw new FileNotFoundException("Eklenti okuması bulunamadı. Oyunda eklentiyle bir okuma yap.");
-    return EklentiCozucu.TakimDurumu(EklentiCozucu.Birlestir(dosyalar.Select(File.ReadAllText)), takimKimlik);
+    var birlesik = EklentiCozucu.Birlestir(dosyalar.Select(File.ReadAllText));
+    var adlar = birlesik.Where(k => k.Key.StartsWith("PersonReference:") && k.Value.TryGetValue("Name", out var n) && n.ValueKind == JsonValueKind.String)
+                        .ToDictionary(k => k.Key, k => k.Value["Name"].GetString()!);
+    return EklentiCozucu.TakimDurumu(birlesik, takimKimlik, adlar);
 }
 
 static (TeknikEkipUyesi, EkipPersonasi.Nitelikler) EkipOku(string yol)
@@ -99,6 +102,12 @@ static void Yazdir(TakimDurumu d, IReadOnlyList<Bulgu> bulgular)
     var v = d.TakimVerimliligi;
     Console.WriteLine($"{d.TakimAdi} — {d.Taktik.Ad}");
     Console.WriteLine($"Verimlilik {v.Genel} | yetenek {v.Yetenek.Genel} | benimseme {v.Benimseme.Genel} | anlayış {v.Anlayis.Genel}" + (v.MacBilgisi != null ? $" | maç bilgisi {v.MacBilgisi.Genel}" : ""));
+    if (d.Dizilis.Count > 0)
+    {
+        Console.WriteLine("\nİlk 11 (topa sahipken → top rakipteyken):");
+        foreach (var p in d.Dizilis)
+            Console.WriteLine($"  {p.Ad ?? p.OyuncuKimlik,-24} {Pozisyon.Ad(p.IpPozisyon)}, {p.IpRolu?.Ad ?? "?"} → {Pozisyon.Ad(p.OopPozisyon)}, {p.OopRolu?.Ad ?? "?"}");
+    }
     Console.WriteLine();
     foreach (var b in bulgular)
     {

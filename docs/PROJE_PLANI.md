@@ -361,14 +361,15 @@ FM26'ya ait olanlar da geçerli, çünkü kullanıcıya göre taktik sistemi de�
 - Teknoloji yığını: C# / .NET 8 (uygulama), .NET 6 (BepInEx eklentisi).
 
 ### Sıradaki adımlar
-1. **Gözlem oturumu (kullanıcıyla):** taktik ve antrenman ekranları açıkken pasif gözlem;
-   rol adları, haftalık program ve bağlam isteyen alanlar.
+1. ~~Gözlem oturumu~~ (yapıldı: 4.358 değer). ~~Rol çözümü~~: 79 rollük katalog, pozisyon
+   maskeleri, K-22 ve K-25 kuralları; eklenti v4 bağlamlı istek, kalıcı şablon ve kimlikten
+   referans kurma destekliyor.
 2. **Anlık görüntü komutu:** eklentinin uygulamanın ihtiyaç duyduğu her şeyi (takım, kadro,
    teknik ekip, taktik, verimlilik, sıradaki rakip raporu) tek seferde üretmesi; ekip profilleri
    (şu an elle yazılmış `ornekler/ekip/jim-fraser.json`) otomatik oluşsun.
 3. **Rakip raporunu ekibin önüne koymak** (Jim'in "bilmiyoruz" dediği eksik).
-4. **Rol çözümü:** IP/OOP rol kodlarının adları → rol çakışması (K-22), oyun kurmayı öldüren
-   roller (K-25), dinlenme savunması (K-12) kuralları.
+4. **Dinlenme savunması (K-12):** rol davranışları bilgi tabanında yeterince tanımlı değil;
+   uydurmamak için önce rol hareketleri belgelenmeli (oyunun rol açıklamaları okunabilir).
 5. **Antrenman planlayıcı:** zayıf alanlara göre aylık program (özellik 3.3).
 6. **Masaüstü arayüzü** (analiz departmanı görünümü + ekip sohbeti).
 7. Moneyball modülü (3.4) ve ekip bilgi süzgeci (3.5).

@@ -12,5 +12,6 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="FMAsistan.Core.Tests" />
+    <EmbeddedResource Include="Veri\fm27-roller.json" LogicalName="FMAsistan.Core.Veri.fm27-roller.json" />
   </ItemGroup>
 </Project>

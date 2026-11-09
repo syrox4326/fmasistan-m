@@ -37,7 +37,18 @@ namespace FMAsistan.Mantik
         private const uint OturumAlani = 1198877028;  // her referansta aynı; kimlik metnine yazılmaz
         private const int SablonSiniri = 5000;
 
-        private static readonly Dictionary<string, InteropReference> Sablonlar = new();
+        // Şablonlar mantık DLL'i yeniden yüklense de kaybolmasın diye AppDomain'de tutulur
+        // (sözlüğün türü yeniden yüklenmeyen derlemelerden gelir, oyun kapanana kadar yaşar).
+        private const string SablonAnahtari = "FMAsistan.Sablonlar";
+        private static readonly Dictionary<string, InteropReference> Sablonlar = SablonDeposu();
+
+        private static Dictionary<string, InteropReference> SablonDeposu()
+        {
+            if (AppDomain.CurrentDomain.GetData(SablonAnahtari) is Dictionary<string, InteropReference> d) return d;
+            var yeni = new Dictionary<string, InteropReference>();
+            AppDomain.CurrentDomain.SetData(SablonAnahtari, yeni);
+            return yeni;
+        }
 
         private sealed class Istek
         {
@@ -93,15 +104,33 @@ namespace FMAsistan.Mantik
             {
                 string kaynakAdi = istek.GetProperty("kaynak").GetString();
                 var kaynak = KaynakDeger(kaynakAdi);
+                // İsteğe bağlı bağlam: bazı özellikler (ör. PositionalAbilitiesRoleTable) pozisyon,
+                // faz ya da takım bağlamı ister. { "ad": "...", "tur": "dinamik|bool|int|long|kaynak", "deger": ... }
+                var baglam = istek.TryGetProperty("baglam", out var bg) ? bg.EnumerateArray().ToList() : null;
+                string etiket = istek.TryGetProperty("etiket", out var et) ? et.GetString() : null;
                 foreach (var y in istek.GetProperty("yollar").EnumerateArray())
                 {
-                    var i = new Istek { Kaynak = kaynakAdi, Yol = y.GetString() };
+                    var i = new Istek { Kaynak = etiket ?? kaynakAdi, Yol = y.GetString() };
                     Bekleyenler.Add(i);
                     if (kaynak == null) { i.Deger = "!kaynak yok"; i.Geldi = true; eksikKaynak++; continue; }
                     try
                     {
                         i.Geri = (Action<BKey, TypedValue>)((k, v) => DegerGeldi(i, v));
-                        i.Anahtar = BindingUtils.Request(agac, kaynak, i.Yol, _sahip, i.Geri);
+                        if (baglam == null)
+                        {
+                            i.Anahtar = BindingUtils.Request(agac, kaynak, i.Yol, _sahip, i.Geri);
+                        }
+                        else
+                        {
+                            var rb = BindingUtils.BuildRequest(agac, kaynak);
+                            foreach (var b in baglam)
+                            {
+                                var deger = BaglamDegeri(b);
+                                if (deger == null) throw new InvalidOperationException("bağlam değeri yok: " + b.GetProperty("ad").GetString());
+                                rb = rb.AddContext(Aralik(b.GetProperty("ad").GetString()), deger);
+                            }
+                            i.Anahtar = rb.Bind(Aralik(i.Yol), _sahip, i.Geri);
+                        }
                     }
                     catch (Exception e)
                     {
@@ -157,6 +186,24 @@ namespace FMAsistan.Mantik
 
         // --- Yardımcılar ---
 
+        private static TypedValue BaglamDegeri(JsonElement b)
+        {
+            string tur = b.GetProperty("tur").GetString();
+            var d = b.GetProperty("deger");
+            return tur switch
+            {
+                "dinamik" => TypedValue.Create<DynamicNumber>(DynamicNumber.Create<long>(d.GetInt64())),
+                "bool" => TypedValue.Create(d.ValueKind == JsonValueKind.True || (d.ValueKind == JsonValueKind.Number && d.GetInt64() != 0)),
+                "int" => TypedValue.Create(d.GetInt32()),
+                "long" => TypedValue.Create(d.GetInt64()),
+                "kaynak" => KaynakDeger(d.GetString()),
+                _ => null,
+            };
+        }
+
+        private static Il2CppSystem.ReadOnlySpan<char> Aralik(string s)
+            => new Il2CppSystem.ReadOnlySpan<char>(new Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<char>(s.ToCharArray()));
+
         private static Bindings Agac()
         {
             var alt = GameSubsystems.Get<BindingSubsystem>();
@@ -166,9 +213,36 @@ namespace FMAsistan.Mantik
         private static readonly Dictionary<string, (MethodInfo cast, MethodInfo create)> Yansimalar = new();
 
         /// <summary>Şablonu, oyunun beklediği somut türle bir TypedValue'ya sarar.</summary>
+        /// <summary>
+        /// "Tür:kimlik" için şablon yoksa aynı türün başka bir şablonundan kurar: kimlik çiftleri
+        /// kopyalanır, yalnızca DatabaseReferenceField değeri değiştirilir.
+        /// </summary>
+        private static InteropReference KimliktenKur(string ad)
+        {
+            int iki = ad.IndexOf(':');
+            if (iki <= 0 || !int.TryParse(ad.Substring(iki + 1), out int kimlik)) return null;
+            string tur = ad.Substring(0, iki);
+            if (!Sablonlar.TryGetValue(tur, out var ornek) || DbKimlik(ornek) == null) return null;
+            var tip = typeof(FM.UI.TeamReference).Assembly.GetType("FM.UI." + tur);
+            if (tip == null) return null;
+
+            var yeni = new PairList();
+            PairList eski = ornek.m_id;
+            for (int i = 0; i < eski.Count; i++)
+            {
+                var p = eski[i];
+                yeni.Add(p.m_id == DbAlani ? new InteropReference.Pair(DbAlani, kimlik) : new InteropReference.Pair(p.m_id, p.m_value));
+            }
+            var ctor = tip.GetConstructor(new[] { typeof(PairList) });
+            if (ctor == null) return null;
+            var r = (InteropReference)ctor.Invoke(new object[] { yeni });
+            Sablonlar[ad] = r;
+            return r;
+        }
+
         private static TypedValue KaynakDeger(string ad)
         {
-            if (!Sablonlar.TryGetValue(ad, out var r)) return null;
+            if (!Sablonlar.TryGetValue(ad, out var r) && (r = KimliktenKur(ad)) == null) return null;
             string tur = TurAdi(r);
             if (!Yansimalar.TryGetValue(tur, out var y))
             {
@@ -283,6 +357,9 @@ namespace FMAsistan.Mantik
             catch { metin = v.AsString(); }
             if (metin == null) return null;
             metin = Sadelestir(metin);
+            // Rol kimlikleri gibi büyük tam sayılar (2^53 üstü) double'da hassasiyet kaybeder; önce tam sayı dene.
+            if (long.TryParse(metin, NumberStyles.Integer, CultureInfo.InvariantCulture, out var tam)) return tam;
+            if (ulong.TryParse(metin, NumberStyles.Integer, CultureInfo.InvariantCulture, out var utam)) return utam;
             if (double.TryParse(metin, NumberStyles.Float, CultureInfo.InvariantCulture, out var sayi)) return Math.Round(sayi, 4);
             if (metin == "True") return true;
             if (metin == "False") return false;
