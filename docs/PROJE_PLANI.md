@@ -1,7 +1,7 @@
 # FM Asistanım — Proje Planı
 
-> Durum: Gereksinimler toplandı, geliştirmeye başlanmadı.
-> Son güncelleme: 2026-11-08
+> Durum: Bellek okuma yöntemi gerçek kayıt dosyasında doğrulandı, uygulama geliştirmeye başlanmadı.
+> Son güncelleme: 2026-11-09
 
 ## 1. Amaç
 
@@ -23,6 +23,9 @@ uygulamalar" gibi olmayacak.
   talimatı) izlenebilir olacak.
 - Arayüz sade ve profesyonel olacak (bir kulübün analiz departmanı aracı gibi).
   Gereksiz emoji, jenerik kart yığını veya şişirilmiş metin olmayacak.
+- **Para birimi kuralı (kullanıcı):** Uygulamada tüm maaşlar **euro ve yıllık** gösterilir.
+  Sterlin veya haftalık değer arayüze hiçbir zaman çıkmaz. Bonservis ve piyasa değerleri de
+  euro olarak gösterilir. Dönüşüm yalnızca veri katmanında yapılır.
 - Kod temiz, test edilmiş ve sürdürülebilir olacak.
 
 ### Kesin Kural: Teknik ekip itaatkâr değil, objektiftir
@@ -132,6 +135,59 @@ oturumda konuşulacak. Tasarım ilkeleri:
   doğrulama testleri olacak.
 - Okunamayan veri için yedek yol (dışa aktarma veya ekran görüntüsü) kalabilir.
 
+#### 4.1.1 Yerel inceleme ve doğrulama (2026-11-09)
+
+**Kurulum:** FM27, Xbox/Game Pass sürümü (`C:\XboxGames\Football Manager 27`). Oyun Unity +
+IL2CPP ile derlenmiş. Oyuncu veritabanı Unity tarafında değil, yerel C++ kütüphanesinde
+(`fm_Data/Plugins/x86_64/game_plugin.dll`, sürüm 27.0). BepInEx kurulu.
+
+**Teknik Oda'nın yöntemi doğrulandı:** Ana program belleği dışarıdan, yalnızca okuyarak
+tarıyor (`OpenProcess`, `VirtualQueryEx`, `ReadProcessMemory`). Okuma çekirdeği
+**FMSuperScout** (https://github.com/mavarobli/FMSuperScout, MIT lisansı). Ofis, roller ve
+"Oyunda aç" özellikleri için ayrıca BepInEx eklentisi kullanıyor.
+
+**FMSuperScout nasıl çalışıyor:**
+- Oyun işlemini yalnızca okuma izniyle açıyor. Yazma yok, ağ erişimi yok (kaynak kod denetlendi).
+- Belleği tarayıp `game_plugin.dll` içini gösteren sanal tablo (vtable) işaretçilerini arıyor.
+  Nesnenin türünü derleyicinin RTTI bilgisinden çıkarıyor. Bu yaklaşım yamalara dayanıklı.
+- Alan konumları (CA, öznitelikler vb.) `core/Fields.cs` içinde FM sürümü başına elle sabitlenmiş.
+  Yama sonrası düzeltme kılavuzu: `docs/repin-guide.md`.
+- Okuduğu veri **kariyerin o anki durumu**dur (güncel CA, sonradan üretilen oyuncular dahil).
+
+**Gerçek kayıt dosyasında test sonucu:** Kaynaktan derlendi (.NET 8 SDK) ve FM27 açıkken
+çalıştırıldı. 17,5 saniyede 92.110 oyuncu ve 45.447 teknik ekip üyesi okundu. Menajer, kulüp
+(Galatasaray) ve oyun tarihi doğru algılandı. Kullanıcı oyuncu (Osimhen, Barış Alper Yılmaz,
+Uğurcan Çakır) ve teknik ekip (Jim Fraser, Emre Utkucan, Simon Wells) değerlerini oyun
+ekranlarıyla karşılaştırdı: **hepsi tutuyor.**
+
+**Kapsam:**
+
+| Okunabilen | Okunamayan (bizim eklememiz gerekecek) |
+|---|---|
+| Oyuncu: görünür + gizli öznitelikler, CA/PA, mevki yeterlilikleri, kişilik, boy, kondisyon, moral, değer | Taktik (diziliş, roller, talimatlar) |
+| Teknik ekip: tüm öznitelikler, CA/PA, iş tercihi, görev | Antrenman ve taktiksel verimlilik |
+| Sözleşme, kulüp, kadro, lig, uyruk, anlaşmalı transferler, oyun tarihi | Maç istatistikleri, sakatlıklar, rakip raporları |
+| | **Gözlemcilerin hangi oyuncuyu ne kadar tanıdığı** (gerçekçilik kuralı için kritik) |
+
+**Notlar:**
+- Bellekteki para birimi **sterlin**, maaşlar **haftalık**. Kontrol: Emre Utkucan haftalık
+  £1.327 = oyunda yıllık €80.500, yani kur yaklaşık 1,1666. Kur sabit kodlanmayacak. Oyunun
+  kullandığı kur bellekten okunacak ya da bilinen bir değerle kalibre edilecek.
+- **Otorite FMSuperScout'ta yanlış eşleştirilmiş.** Ham blok okumasıyla bulundu: Otorite,
+  teknik ekip öznitelik tabanının (`NPLO_ATTRS`) **+0x04** konumunda, **ham 1-20** değer
+  olarak duruyor (5 ile çarpılmamış). Doğrulama: Jim Fraser 7, Eren Mert 16 (iki değer de oyunla
+  aynı). FMSuperScout'un `KV_distributie` (+0x2A) ve `KV_vangen` (+0x29) alanları Otorite
+  değil, karşılıkları bilinmiyor. FM27'de teknik ekip için ayrı bir Disiplin özniteliği yok.
+- Teknik ekip bloğunda FMSuperScout'un okumadığı başka değerler de var: +0x00..+0x0B ve
+  +0x0E..+0x19 aralığında ham değerler, +0x1A, +0x28, +0x2B, +0x2D, +0x2E, +0x30 konumlarında
+  ×5 değerler. Bunların ne olduğu ileride aynı yöntemle (ham blok + oyun ekranı) çözülecek.
+- FM27 resmi çıkışı 10 Kasım 2026. İlk gün yaması alan konumlarını kaydırabilir. Çekirdeği
+  alırsak FMSuperScout'taki yama düzeltmelerini takip edip kendimize aktarmamız gerekir.
+
+**Ön karar:** FMSuperScout'un okuma çekirdeği (MIT, lisans metni korunarak) temel alınacak.
+Bu, teknoloji yığınını **C# / .NET** yönüne çekiyor. Eksik veriler (yukarıdaki sağ sütun) aynı
+yöntemle ya da gerekirse oyun içi BepInEx eklentisiyle Unity tarafından okunacak.
+
 ### 4.2 Yapay zekâ gerekli mi?
 Değerlendirme: **Evet, ama tek başına değil.**
 
@@ -182,11 +238,14 @@ FM26'ya ait olanlar da geçerli, çünkü kullanıcıya göre taktik sistemi de�
 16. https://youtu.be/cdGSnUsoUdo
 17. https://youtu.be/sbJyQszXSMM
 
-## 6. Yarın İlk Adımlar
+## 6. Sıradaki Adımlar
 
-1. FM27'de hangi verilerin dışa aktarılabildiğini kullanıcının bilgisayarında birlikte
-   kontrol etmek (kadro, oyuncu öznitelikleri, taktik, rakip raporu, antrenman ekranı).
-2. Bilgisayarda Claude Code kurulu mu, hangi abonelik var? Yapay zekâ entegrasyonunu
+1. ~~Bellek okuma yöntemini doğrulamak~~ (tamamlandı, bkz. 4.1.1).
+2. Gözlemci bilgisinin (hangi oyuncu ne kadar tanınıyor) bellekte nerede tutulduğunu
+   araştırmak.
+3. Taktik ve antrenman verisinin bellekte (yerel C++ veya Unity tarafında) yerini araştırmak.
+4. Oyunun sterlin/euro kurunu bellekten okumanın yolunu bulmak.
+5. Bilgisayarda Claude Code kurulu mu, hangi abonelik var? Yapay zekâ entegrasyonunu
    kesinleştirmek.
-3. Video transkriptlerine erişimi denemek ve bilgi tabanının yapısını belirlemek.
-4. Teknoloji yığınını seçip proje iskeletini kurmak.
+6. Video transkriptlerine erişimi denemek ve bilgi tabanının yapısını belirlemek.
+7. Teknoloji yığınını (C# / .NET yönünde) kesinleştirip proje iskeletini kurmak.
