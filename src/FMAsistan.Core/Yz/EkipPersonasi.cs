@@ -147,6 +147,20 @@ public static class EkipPersonasi
                 if (rk.AnalistSeviyesi != null) s.AppendLine($"- Raporun güvenilirliği (analiz ekibimiz hakkında oyunun notu): {rk.AnalistSeviyesi}");
                 if (rk.TehditDegerlendirmesi != null) s.AppendLine($"- Tehdit değerlendirmesi: {rk.TehditDegerlendirmesi}");
                 if (rk.EnCokKullanilanDizilis != null) s.AppendLine($"- En çok kullandığı diziliş: {rk.EnCokKullanilanDizilis}");
+                if (rk.MuhtemelOyunSistemi != null) s.AppendLine($"- Muhtemel oyun sistemi (rapordan): {rk.MuhtemelOyunSistemi}");
+                if (rk.MuhtemelTaktik is { } mt)
+                {
+                    s.AppendLine($"- Muhtemel 11 (rapordan): {mt.Dizilis}" + (mt.Ozet != null ? $" — {mt.Ozet}" : ""));
+                    foreach (var o in mt.Oyuncular)
+                        s.AppendLine($"  - {Pozisyon.Ad(o.Pozisyon)}: {o.Ad ?? o.OyuncuKimlik}" + (o.Rolu != null ? $" ({o.Rolu.Ad})" : ""));
+                }
+                foreach (var grup in rk.Dizilisler.GroupBy(x => x.Faz))
+                    s.AppendLine($"- {(grup.Key == Faz.TopaSahipken ? "Topa sahipken" : "Top rakipteyken")} kullandığı dizilişler: " +
+                                 string.Join(", ", grup.Select(x => $"{x.Dizilis} (%{x.YuzdeKullanim:0}, {x.IlkOnbirMaci} maçta başladı)")));
+                if (rk.GucluYonler.Count > 0)
+                    s.AppendLine("- Gözlemci raporu, güçlü yönler: " + string.Join(" | ", rk.GucluYonler.Select(m => $"{m.Baslik}: {m.Metin}")));
+                if (rk.ZayifYonler.Count > 0)
+                    s.AppendLine("- Gözlemci raporu, zayıf yönler: " + string.Join(" | ", rk.ZayifYonler.Select(m => $"{m.Baslik}: {m.Metin}")));
                 foreach (var grup in rk.Analiz.Notlar.GroupBy(x => x.Bolum))
                 {
                     s.AppendLine($"### Rakip — {grup.Key}");

@@ -55,7 +55,33 @@ public sealed record RakipRaporu(
     string? TehditDegerlendirmesi,
     string? EnCokKullanilanDizilis,
     string? AnalistSeviyesi,
-    VeriMerkezi Analiz);
+    VeriMerkezi Analiz)
+{
+    /// <summary>Raporun "muhtemel 11" bölümü (TeamReference.ExpectedTactic).</summary>
+    public MuhtemelTaktik? MuhtemelTaktik { get; init; }
+    /// <summary>Raporun "muhtemel oyun sistemi" (ExpectedTacticalStyle), okunduysa.</summary>
+    public string? MuhtemelOyunSistemi { get; init; }
+    /// <summary>Gözlemci raporunun güçlü / zayıf yönleri (ScoutReportStrengths/Weaknesses).</summary>
+    public IReadOnlyList<RaporMaddesi> GucluYonler { get; init; } = Array.Empty<RaporMaddesi>();
+    public IReadOnlyList<RaporMaddesi> ZayifYonler { get; init; } = Array.Empty<RaporMaddesi>();
+    /// <summary>Kullandığı dizilişler (ExpectedFormations.FormationsUsed), faz başına.</summary>
+    public IReadOnlyList<DizilisKullanimi> Dizilisler { get; init; } = Array.Empty<DizilisKullanimi>();
+}
+
+public sealed record RaporMaddesi(string Baslik, string Metin);
+
+public sealed record MuhtemelOyuncu(string OyuncuKimlik, string? Ad, ulong Pozisyon, ulong RolKodu)
+{
+    /// <summary>
+    /// Rol kodu = topa sahipken rolü + 2^21/2^22/2^23 bitlerinden biri (muhtemelen görev;
+    /// doğrulanmadığı için kullanılmaz). Rol adı bu bitler çıkarılarak bulunur.
+    /// </summary>
+    public Rol? Rolu => RolKatalogu.Bul(Faz.TopaSahipken, RolKodu & ~((1UL << 21) | (1UL << 22) | (1UL << 23)));
+}
+
+public sealed record MuhtemelTaktik(string? Dizilis, string? Ozet, IReadOnlyList<MuhtemelOyuncu> Oyuncular);
+
+public sealed record DizilisKullanimi(Faz Faz, string Dizilis, double YuzdeKullanim, int IlkOnbirMaci, int YaratilanPozisyon);
 
 /// <summary>Takım talimatının seçili değeri (oyunun iç adıyla) ve oyunun sunduğu seçenekler.</summary>
 public sealed record OyunAyari(string Ayar, string Deger, IReadOnlyList<string> Secenekler);

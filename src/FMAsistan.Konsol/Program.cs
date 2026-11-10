@@ -108,7 +108,12 @@ async Task<int> Guncelle()
               "FilteredPlayers", "FilteredSubs" }.Concat(Talimatlar.Ozellikler.Keys).ToArray() },
         new { kaynak = "TeamReference:" + takimKimlik, yollar = new[] { "Name", "NextFixture", "MostUsedFormation", "GoalAnalysisScoring", "GoalAnalysisConceding", "ExpectedFormations" } },
     };
-    var eksik = durum.Kadro.Select(k => k.Kimlik).Concat(durum.Dizilis.Select(p => p.OyuncuKimlik)).Distinct().Where(k => !adlar.ContainsKey(k)).ToList();
+    if (durum.Rakip is { } rk)
+        istekler.Add(new { kaynak = "TeamReference:" + rk.TakimKimlik, yollar = new[] { "Name", "ScoutReportStrengths", "ScoutReportWeaknesses",
+            "ExpectedFormations", "MostUsedFormation", "NextOppositionThreatLevelAssessment", "DataAnalystLevelInfo" } });
+    var rakipOyunculari = durum.Rakip?.MuhtemelTaktik?.Oyuncular.Select(o => o.OyuncuKimlik) ?? Enumerable.Empty<string>();
+    var eksik = durum.Kadro.Select(k => k.Kimlik).Concat(durum.Dizilis.Select(p => p.OyuncuKimlik)).Concat(rakipOyunculari)
+        .Distinct().Where(k => !adlar.ContainsKey(k)).ToList();
     foreach (var k in eksik) istekler.Add(new { kaynak = k, yollar = new[] { "Name" } });
     Console.WriteLine($"Oyundan isteniyor: {istekler.Count} kaynak ({eksik.Count} eksik oyuncu adı).");
     if (!await EklentiIste("oku.json", JsonSerializer.Serialize(new { sure = 12, istekler }), Path.Combine(veri, "oku", "son.txt"))) return 3;
@@ -180,7 +185,18 @@ static void Yazdir(TakimDurumu d, IReadOnlyList<Bulgu> bulgular)
         foreach (var a in d.Ayarlar) Console.WriteLine($"  {a.Ayar}: {a.Deger}");
     }
     if (d.Rakip is { } r)
+    {
         Console.WriteLine($"\nRakip: {r.Ad} — {r.TehditDegerlendirmesi} (en çok: {r.EnCokKullanilanDizilis}; {r.Analiz.Notlar.Count} analiz notu)");
+        if (r.MuhtemelTaktik is { } mt)
+        {
+            Console.WriteLine($"  Muhtemel 11: {mt.Dizilis} — {mt.Ozet}");
+            foreach (var o in mt.Oyuncular)
+                Console.WriteLine($"    {Pozisyon.Ad(o.Pozisyon),-26} {o.Ad ?? o.OyuncuKimlik}" + (o.Rolu != null ? $" ({o.Rolu.Ad})" : ""));
+        }
+        foreach (var dz in r.Dizilisler)
+            Console.WriteLine($"  {(dz.Faz == Faz.TopaSahipken ? "Topa sahipken" : "Top rakipteyken")}: {dz.Dizilis} %{dz.YuzdeKullanim:0}");
+        Console.WriteLine($"  Gözlemci raporu: {r.GucluYonler.Count} güçlü, {r.ZayifYonler.Count} zayıf yön");
+    }
     Console.WriteLine();
     foreach (var b in bulgular)
     {

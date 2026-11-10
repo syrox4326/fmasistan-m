@@ -83,7 +83,7 @@ public static class VeriMerkeziCozucu
             foreach (var p in e.EnumerateObject()) foreach (var s in Metinler(p.Value)) yield return s;
     }
 
-    private static bool Anlamli(string? s) => !string.IsNullOrWhiteSpace(s) && s.Trim().Length > 10;
+    private static bool Anlamli(string? s) => !string.IsNullOrWhiteSpace(s) && s.Trim().Length > 10 && !s.StartsWith('!');
 
     private static string Temizle(string s) => string.Join("\n", s.Split('\n').Select(x => x.Trim()).Where(x => x.Length > 0));
 
@@ -204,11 +204,81 @@ public static class VeriMerkeziCozucu
         }
         if (rakip == null || !veri.TryGetValue("TeamReference:" + rakip, out var r)) return null;
 
-        string? M(string ad) => r.TryGetValue(ad, out var e) && e.ValueKind == JsonValueKind.String ? e.GetString() : null;
+        string? M(string ad) => r.TryGetValue(ad, out var e) && e.ValueKind == JsonValueKind.String && !Okunamadi(e.GetString()) ? e.GetString() : null;
         string? analist = r.TryGetValue("DataAnalystLevelInfo", out var dai) && dai.ValueKind == JsonValueKind.Object
                           && dai.TryGetProperty("AnalystLevelDescription", out var ald) ? ald.GetString() : null;
         return new RakipRaporu(rakip, M("Name"), M("NextOppositionThreatLevelAssessment"), M("MostUsedFormation"), analist,
-            Coz(veri, rakip, adlar));
+            Coz(veri, rakip, adlar))
+        {
+            MuhtemelTaktik = MuhtemelTaktikCoz(r, adlar),
+            MuhtemelOyunSistemi = r.TryGetValue("ExpectedTacticalStyle", out var es) ? DisplayMetni(es) : null,
+            GucluYonler = Maddeler(r, "ScoutReportStrengths"),
+            ZayifYonler = Maddeler(r, "ScoutReportWeaknesses"),
+            Dizilisler = DizilisKullanimlari(r),
+        };
+    }
+
+    private static MuhtemelTaktik? MuhtemelTaktikCoz(Dictionary<string, JsonElement> r, IReadOnlyDictionary<string, string>? adlar)
+    {
+        if (!r.TryGetValue("ExpectedTactic", out var et) || et.ValueKind != JsonValueKind.Object) return null;
+        var oyuncular = new List<MuhtemelOyuncu>();
+        if (et.TryGetProperty("Players", out var ps) && ps.ValueKind == JsonValueKind.Array)
+            foreach (var p in ps.EnumerateArray())
+            {
+                string? k = p.TryGetProperty("Player", out var pl) && pl.ValueKind == JsonValueKind.String ? pl.GetString() : null;
+                if (k == null) continue;
+                oyuncular.Add(new MuhtemelOyuncu(k, adlar != null && adlar.TryGetValue(k, out var ad) ? ad : null,
+                    UzunSayi(p, "Position"), UzunSayi(p, "Role")));
+            }
+        string? M(string ad) => et.TryGetProperty(ad, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+        return new MuhtemelTaktik(M("FormationType"), M("TacticSummaryString"), oyuncular);
+    }
+
+    private static IReadOnlyList<RaporMaddesi> Maddeler(Dictionary<string, JsonElement> r, string ozellik)
+    {
+        var l = new List<RaporMaddesi>();
+        if (!r.TryGetValue(ozellik, out var e) || e.ValueKind != JsonValueKind.Array) return l;
+        foreach (var m in e.EnumerateArray())
+        {
+            string? baslik = m.TryGetProperty("ProConsShortString", out var b) ? b.GetString() : null;
+            string? metin = m.TryGetProperty("ProConsLongString", out var t) ? t.GetString() : null;
+            if (!string.IsNullOrWhiteSpace(metin)) l.Add(new RaporMaddesi(baslik ?? "", metin!));
+        }
+        return l;
+    }
+
+    private static IReadOnlyList<DizilisKullanimi> DizilisKullanimlari(Dictionary<string, JsonElement> r)
+    {
+        var l = new List<DizilisKullanimi>();
+        if (!r.TryGetValue("ExpectedFormations", out var ef) || !ef.TryGetProperty("FormationsUsed", out var fu)) return l;
+        foreach (var (alan, faz) in new[] { ("InPossessionFormations", Faz.TopaSahipken), ("OutPossessionFormations", Faz.TopRakipteyken) })
+        {
+            if (!fu.TryGetProperty(alan, out var liste) || liste.ValueKind != JsonValueKind.Array) continue;
+            foreach (var d in liste.EnumerateArray())
+            {
+                string? ad = d.TryGetProperty("FormationType", out var f) ? f.GetString() : null;
+                if (ad == null) continue;
+                l.Add(new DizilisKullanimi(faz, ad, Sayi(d, "FormationUsedPercentage") ?? 0,
+                    (int)(Sayi(d, "FormationStarted") ?? 0), (int)(Sayi(d, "ChancesCreated") ?? 0)));
+            }
+        }
+        return l;
+    }
+
+    /// <summary>Eklentinin "okunamadı" işareti ("!..." ile başlayan metin) değer sayılmaz.</summary>
+    private static bool Okunamadi(string? s) => s != null && s.StartsWith('!');
+
+    private static string? DisplayMetni(JsonElement e) => e.ValueKind switch
+    {
+        JsonValueKind.String => Okunamadi(e.GetString()) ? null : e.GetString(),
+        JsonValueKind.Object when e.TryGetProperty("DisplayValue", out var d) && d.ValueKind == JsonValueKind.String => d.GetString(),
+        _ => null,
+    };
+
+    private static ulong UzunSayi(JsonElement e, string ad)
+    {
+        if (!e.TryGetProperty(ad, out var v) || v.ValueKind != JsonValueKind.Number) return 0;
+        return v.TryGetUInt64(out var u) ? u : (ulong)v.GetDouble();
     }
 
     private static double? Sayi(JsonElement e, string ad)

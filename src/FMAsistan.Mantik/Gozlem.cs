@@ -52,6 +52,7 @@ namespace FMAsistan.Mantik
             // Rakip raporu
             "KeyFindings", "NextOppositionThreatLevelAssessment", "TeamReportSquadDepth",
             "PreviousMeetings", "RecentFormValues", "HasTeamReport", "DataAnalystLevelInfo",
+            "ExpectedTactic", "ExpectedTacticalStyle", "ScoutReportStrengths", "ScoutReportWeaknesses",
             // Antrenman
             "TrainingScheduleWeeks", "TrainingScheduleName", "CalendarWeekAsList", "CurrentTrainingSession",
             "CoachAssignments", "TrainingIntensitySettingsForConditionRanges",
