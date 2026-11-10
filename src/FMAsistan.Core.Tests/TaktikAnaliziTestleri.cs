@@ -23,7 +23,7 @@ public class TaktikAnaliziTestleri
         var d = Durum();
         Assert.Equal("Galatasaray", d.TakimAdi);
         Assert.Equal("Pozitif Futbol", d.Taktik.Mentalite);
-        Assert.Equal(6, d.Taktik.Yogunluk);
+        Assert.Null(d.Taktik.TaktikStili); // test verisinde TacticalStyleDropdown yok
 
         var v = d.TakimVerimliligi;
         Assert.Equal(Puan.Tek(58), v.Genel);

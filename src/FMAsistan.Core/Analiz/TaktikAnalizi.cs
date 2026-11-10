@@ -48,6 +48,8 @@ public static class TaktikAnalizi
         MacBilgisiBulgulari(v.MacBilgisi, b);
         RolCakismalari(d.Dizilis, b);
         OyunKurmayiOldurenRoller(d.Dizilis, b);
+        IzgaraBulgulari(d.VeriMerkezi, b);
+        SonMacBulgusu(d.VeriMerkezi, b);
 
         foreach (var u in d.Uyarilar)
             b.Add(new Bulgu("OYUN", Onem.Orta, "Oyunun uyarısı", u, new[] { "Taktik ekranı durum bayrağı" }, null));
@@ -206,6 +208,37 @@ public static class TaktikAnalizi
             "Risksiz oynayan kaleci ve çakılı stoper topu dikine uzaklaştırmaya meyillidir; hangi oyun kurulumunu seçersen seç kısa kurulum gerçekleşmez.",
             kanit,
             "Ayağı zayıf oyunculara odak rolü vermek istemiyorsan nötr 'Kaleci' ve 'Stoper' rollerini kullan."));
+    }
+
+    /// <summary>
+    /// Taktik ızgarası: oyunun kendi bölge değerlendirmesi. "Sıkıntılı" geçen bölgeler oyunun
+    /// tespit ettiği açıklardır; oyunun bölge yorumları kanıt olarak aktarılır.
+    /// </summary>
+    private static void IzgaraBulgulari(VeriMerkezi vm, List<Bulgu> b)
+    {
+        var sorunlu = vm.Izgara.Where(z => z.Durum.Contains("Sıkıntılı", StringComparison.CurrentCultureIgnoreCase)
+                                        && !z.Durum.Contains("Sıkıntısız", StringComparison.CurrentCultureIgnoreCase)).ToList();
+        if (sorunlu.Count == 0) return;
+        var kanit = sorunlu.Select(z => $"{z.Ad}: {z.Durum}" +
+                                        (z.Yorumlar.Count > 0 ? " — " + string.Join(" ", z.Yorumlar) : "")).ToList();
+        b.Add(new Bulgu("OYUN-IZGARA", sorunlu.Any(z => !z.Durum.StartsWith("Hafif", StringComparison.CurrentCultureIgnoreCase)) ? Onem.Yuksek : Onem.Orta,
+            $"Taktik ızgarasında {sorunlu.Count} sıkıntılı bölge",
+            "Oyunun taktik ızgarası bu bölgeleri mevcut diziliş ve oyuncularla sorunlu görüyor.",
+            kanit,
+            "Bu bölgeleri kapsayan oyuncuların rol ve görevlerini gözden geçir; oyunun bölge yorumlarındaki oyuncu adlarına bak."));
+    }
+
+    /// <summary>Son maç: oyunun analiz ekibinin genel değerlendirmesi ve temel sayılar.</summary>
+    private static void SonMacBulgusu(VeriMerkezi vm, List<Bulgu> b)
+    {
+        if (vm.SonMac is not { } s) return;
+        var kanit = new List<string>();
+        if (s.Mac != null) kanit.Add(s.Mac);
+        if (s.Xg != null) kanit.Add($"xG: {s.Xg:0.00}");
+        if (s.Sut != null) kanit.Add($"Şut: {s.Sut}, isabetli: {s.IsabetliSut}");
+        if (s.Degerlendirme != null) kanit.Add($"Analiz ekibi: \"{s.Degerlendirme}\"");
+        if (kanit.Count == 0) return;
+        b.Add(new Bulgu("OYUN-SONMAC", Onem.Bilgi, "Son maç", "Veri Merkezi'nin son maç değerlendirmesi.", kanit, null));
     }
 
     // K-09: Rakip raporu kalitesi (gerçekçilik: ekip kalitesine bağlı).

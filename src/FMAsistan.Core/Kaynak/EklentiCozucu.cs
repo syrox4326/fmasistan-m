@@ -108,12 +108,41 @@ public static class EklentiCozucu
             new TaktikOzeti(
                 Metin(taktik, "Name") ?? "?",
                 Metin(taktik, "MentalityString") ?? "?",
-                Alan(taktik, "TacticalIntensity") is { ValueKind: JsonValueKind.Number } y ? (int)y.GetDouble() : 0,
+                Alan(taktik, "TacticalStyleDropdown") is { ValueKind: JsonValueKind.Object } st ? Metin(st, "DisplayValue") : null,
                 Metin(takim, "MostUsedFormation")),
             Verimlilik(te),
             oyuncular,
             uyarilar,
             dizilis);
+    }
+
+    /// <summary>
+    /// Kadro: TeamTacticReference.FilteredPlayers (tüm kadro; Index -1 = seçilmemiş) ve
+    /// FilteredSubs (yedekler). İlk 11, dizilişteki oyunculardır.
+    /// </summary>
+    public static IReadOnlyList<KadroOyuncusu> Kadro(
+        Dictionary<string, Dictionary<string, JsonElement>> veri,
+        string takimKimlik,
+        IReadOnlyCollection<string> ilkOnbir,
+        IReadOnlyDictionary<string, string>? adlar = null)
+    {
+        var sonuc = new List<KadroOyuncusu>();
+        if (!veri.TryGetValue("TeamTacticReference:" + takimKimlik, out var t)) return sonuc;
+        var yedekler = new HashSet<string>();
+        if (Alan(t, "FilteredSubs") is { ValueKind: JsonValueKind.Array } fs)
+            foreach (var p in fs.EnumerateArray()) if (Metin(p, "Person") is { } k) yedekler.Add(k);
+        var gorulen = new HashSet<string>();
+        void Ekle(string k)
+        {
+            if (!gorulen.Add(k)) return;
+            var durum = ilkOnbir.Contains(k) ? KadroDurumu.IlkOnbir : yedekler.Contains(k) ? KadroDurumu.Yedek : KadroDurumu.KadroDisi;
+            sonuc.Add(new KadroOyuncusu(k, adlar != null && adlar.TryGetValue(k, out var ad) ? ad : null, durum));
+        }
+        foreach (var k in ilkOnbir) Ekle(k);
+        foreach (var k in yedekler) Ekle(k);
+        if (Alan(t, "FilteredPlayers") is { ValueKind: JsonValueKind.Array } fp)
+            foreach (var p in fp.EnumerateArray()) if (Metin(p, "Person") is { } k) Ekle(k);
+        return sonuc;
     }
 
     /// <summary>Rol/pozisyon kimlikleri 2^53'ü aşabilir; double'a çevirmeden okunur.</summary>

@@ -53,12 +53,26 @@ public class YzTestleri
     public void Cli_argumanlari_araclari_kapatir_ve_oturumu_surdurur()
     {
         var cli = new ClaudeCodeCli(claudeYolu: "claude", calismaKlasoru: Path.GetTempPath());
-        var a = cli.Argumanlar("sistem", "abc").ToList();
+        var a = cli.Argumanlar("sistem.txt", "abc").ToList();
         int i = a.IndexOf("--tools");
         Assert.Equal("", a[i + 1]);
         Assert.Contains("--strict-mcp-config", a);
+        Assert.Equal("sistem.txt", a[a.IndexOf("--system-prompt-file") + 1]);
         Assert.Equal("abc", a[a.IndexOf("--resume") + 1]);
-        Assert.DoesNotContain("--resume", cli.Argumanlar("sistem", null));
+        Assert.DoesNotContain("--resume", cli.Argumanlar("sistem.txt", null));
+    }
+
+    [Fact]
+    public void Uzun_sistem_talimati_dosyaya_yazilir_ve_ayni_icerik_ayni_dosyayi_kullanir()
+    {
+        string klasor = Path.Combine(Path.GetTempPath(), "fmasistan-test-" + Guid.NewGuid().ToString("N"));
+        var cli = new ClaudeCodeCli(claudeYolu: "claude", calismaKlasoru: klasor);
+        string uzun = new string('a', 50_000);
+        string yol = cli.SistemDosyasi(uzun);
+        Assert.Equal(uzun, File.ReadAllText(yol));
+        Assert.Equal(yol, cli.SistemDosyasi(uzun));
+        Assert.NotEqual(yol, cli.SistemDosyasi(uzun + "b"));
+        Directory.Delete(klasor, true);
     }
 
     [Fact]

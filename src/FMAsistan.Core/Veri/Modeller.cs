@@ -53,7 +53,12 @@ public sealed record Verimlilik(
 
 public sealed record OyuncuVerimliligi(string OyuncuKimlik, string? Ad, Verimlilik Verimlilik);
 
-public sealed record TaktikOzeti(string Ad, string Mentalite, int Yogunluk, string? EnCokKullanilanDizilis);
+/// <summary>
+/// Taktiğin oyunda görünen özeti. Yalnızca oyunun arayüzde gösterdiği kavramlar (oyundaki
+/// adlarıyla) tutulur; oyunun iç sayıları (ör. TacticalIntensity) tutulmaz, çünkü yapay
+/// zekâya verilince oyunda olmayan ayarlar önerilmesine yol açıyor.
+/// </summary>
+public sealed record TaktikOzeti(string Ad, string Mentalite, string? TaktikStili, string? EnCokKullanilanDizilis);
 
 /// <summary>Teknik ekip üyesinin futbol felsefesi (oyunun PersonReference.Preferred* alanları).</summary>
 public sealed record Felsefe(string? Dizilis, string? Mentalite, string? Pres, string? Markaj);
@@ -68,4 +73,21 @@ public sealed record TakimDurumu(
     Verimlilik TakimVerimliligi,
     IReadOnlyList<OyuncuVerimliligi> Oyuncular,
     IReadOnlyList<string> Uyarilar,
-    IReadOnlyList<TaktikPozisyonu> Dizilis);
+    IReadOnlyList<TaktikPozisyonu> Dizilis)
+{
+    /// <summary>Takımın Veri Merkezi (oyunun analiz ekibinin raporları); okunmadıysa boş.</summary>
+    public VeriMerkezi VeriMerkezi { get; init; } = VeriMerkezi.Bos;
+
+    /// <summary>Taktik ekranındaki ayarlar, oyunun sunduğu seçeneklerle.</summary>
+    public IReadOnlyList<OyunAyari> Ayarlar { get; init; } = Array.Empty<OyunAyari>();
+
+    /// <summary>Sıradaki rakip hakkındaki rapor; kaydedilmemişse null.</summary>
+    public RakipRaporu? Rakip { get; init; }
+
+    /// <summary>Kadro: ilk 11, yedekler ve kadro dışı (taktik ekranındaki oyuncu listesi).</summary>
+    public IReadOnlyList<KadroOyuncusu> Kadro { get; init; } = Array.Empty<KadroOyuncusu>();
+}
+
+public enum KadroDurumu { IlkOnbir, Yedek, KadroDisi }
+
+public sealed record KadroOyuncusu(string Kimlik, string? Ad, KadroDurumu Durum);

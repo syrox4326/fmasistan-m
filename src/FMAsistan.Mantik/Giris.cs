@@ -14,7 +14,7 @@ namespace FMAsistan.Mantik
     /// </summary>
     public static class Giris
     {
-        public const string Surum = "4";
+        public const string Surum = "6";
 
         /// <summary>İletişim klasörü; yükleyici verir (oyun klasöründe BepInEx\FMAsistan\veri).</summary>
         internal static string Klasor { get; private set; }
@@ -25,14 +25,35 @@ namespace FMAsistan.Mantik
         private static readonly Dictionary<string, int> HataSayisi = new();
         private static DateTime _sonKalp = DateTime.MinValue;
 
+        /// <summary>
+        /// Kancaların doğrulandığı oyun sürümleri (Application.version). Yeni bir yamada oyunun
+        /// kodu değişir; doğrulanmamış sürümde kanca takmak oyunu çökertebilir (27.0.1'de oldu).
+        /// Yeni sürüm: oyunu aç, logdaki sürümü gör, eklentiyi o sürümün arayüz dosyalarıyla
+        /// derle, test et, buraya ekle.
+        /// </summary>
+        private static readonly string[] DogrulananSurumler = { "27.0.0.2493426", "27.0.1.2494769" };
+
+        internal static bool KancaGuvenli { get; private set; }
+
         public static void Baslat(Action<string> gunluk, string klasor)
         {
             Gunluk = gunluk ?? (_ => { });
             Klasor = klasor;
             Directory.CreateDirectory(Klasor);
-            Guvenli("Dinleyici kurulumu", Dinleyici.Kur);
-            Guvenli("Gözlem kurulumu", Gozlem.Kur);
-            Gunluk($"FM Asistanım mantığı v{Surum} yüklendi ({DateTime.Now:HH:mm:ss}).");
+
+            string oyun = null;
+            try { oyun = UnityEngine.Application.version; } catch { }
+            KancaGuvenli = oyun != null && Array.IndexOf(DogrulananSurumler, oyun) >= 0;
+            if (KancaGuvenli)
+            {
+                Guvenli("Dinleyici kurulumu", Dinleyici.Kur);
+                Guvenli("Gözlem kurulumu", Gozlem.Kur);
+            }
+            else
+            {
+                Gunluk($"UYARI: Oyun sürümü ({oyun ?? "?"}) doğrulanmamış. Kancalar takılmadı; okuma ve dinleme kapalı. Eklentiyi bu sürüm için doğrulamak gerekiyor.");
+            }
+            Gunluk($"FM Asistanım mantığı v{Surum} yüklendi ({DateTime.Now:HH:mm:ss}), oyun {oyun ?? "?"}.");
         }
 
         public static void Durdur()
@@ -45,6 +66,7 @@ namespace FMAsistan.Mantik
         public static void Tick()
         {
             KalpYaz();
+            if (!KancaGuvenli) return;
             Guvenli("Komutlar", Komutlar);
             Guvenli("Dinleyici", Dinleyici.Tick);
             Guvenli("Okuyucu", Okuyucu.Tick);
@@ -76,6 +98,49 @@ namespace FMAsistan.Mantik
                 string icerik = File.ReadAllText(gozle).Trim();
                 File.Delete(gozle);
                 Gozlem.Baslat(int.TryParse(icerik, out var gs) ? Math.Clamp(gs, 5, 600) : 60);
+            }
+
+            // Sayısal özellik kimliklerini (PropertyID) oyunun iç adlarına çevirir.
+            string kimlikler = Path.Combine(Klasor, "kimlik-adlari.json");
+            if (File.Exists(kimlikler))
+            {
+                var liste = JsonSerializer.Deserialize<uint[]>(File.ReadAllText(kimlikler));
+                File.Delete(kimlikler);
+                var sonuc = new Dictionary<string, string>();
+                foreach (var id in liste)
+                {
+                    try { sonuc[id.ToString()] = new SI.Bindable.Reference.Core.PropertyID(id).ToString(); }
+                    catch (Exception e) { sonuc[id.ToString()] = "!" + e.Message; }
+                }
+                DosyaYaz("kimlik-adlari-sonuc.json", JsonSerializer.Serialize(sonuc, new JsonSerializerOptions { WriteIndented = true }));
+            }
+
+            // Deneme: oyunun çeviri sistemi. { "sayilar": [...], "metinler": [...] }
+            string ceviri = Path.Combine(Klasor, "ceviri.json");
+            if (File.Exists(ceviri))
+            {
+                using var belge = JsonDocument.Parse(File.ReadAllText(ceviri));
+                File.Delete(ceviri);
+                var sonuc = new Dictionary<string, string>();
+                if (belge.RootElement.TryGetProperty("sayilar", out var sy))
+                    foreach (var x in sy.EnumerateArray())
+                    {
+                        long id = x.GetInt64();
+                        try { sonuc["#" + id] = (string)SI.Translation.TranslationManager.Translate(unchecked((int)id)); }
+                        catch (Exception e) { sonuc["#" + id] = "!" + e.Message; }
+                    }
+                if (belge.RootElement.TryGetProperty("metinler", out var mt))
+                    foreach (var x in mt.EnumerateArray())
+                    {
+                        string s = x.GetString();
+                        try { sonuc[s] = (string)SI.Translation.TranslationManager.Format(s); }
+                        catch (Exception e) { sonuc[s] = "!" + e.Message; }
+                    }
+                DosyaYaz("ceviri-sonuc.json", JsonSerializer.Serialize(sonuc, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                }));
             }
 
             string sablon = Path.Combine(Klasor, "sablonlar.flag");
@@ -118,6 +183,7 @@ namespace FMAsistan.Mantik
                     ["zaman"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                     ["mantik"] = Surum,
                     ["oyun"] = oyun,
+                    ["dogrulandi"] = KancaGuvenli,
                     ["dinleniyor"] = Dinleyici.Aktif,
                     ["sablon"] = Okuyucu.SablonSayisi,
                     ["hatalar"] = Hatalar,

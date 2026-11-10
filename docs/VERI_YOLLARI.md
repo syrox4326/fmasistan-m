@@ -102,6 +102,31 @@ Bazı özellikler bağlam ister; okuyucu `"baglam": [{ "ad", "tur", "deger" }]` 
   (`DefensiveLine`, `LineOfEngagement`, `PressingTrigger`, `Tackling`...: PropertyID olarak).
 - `PersonReference`: `ScoutedBestRole`, `InPossessionRoleStarRangeForSquadPlannerSeason`.
 
+## Takım talimatları (27.0.1, 2026-11-10)
+
+`TeamTacticReference` üzerinde 27 talimat özelliği; seçili değer bir PropertyID'dir
+(`kimlik-adlari.json` komutuyla iç ada çevrilir, ör. `Tempo = MuchHigherTempo`). Liste ve
+Türkçe karşılıklar: `src/FMAsistan.Core/Veri/Talimatlar.cs`. Oyunun çeviri sistemi
+(`SI.Translation.TranslationManager`) bu kimlikler için metin döndürmüyor; Türkçe etiketler
+arayüzün kendi dosyalarında. Tam seçenek listeleri okunamadı.
+
+## Veri Merkezi (yalnızca ekran açıkken hesaplanır)
+
+`TeamReference` (bizim takım ve rakip): `KeyFindingsVisuals`, `LastMatchAnalysis`
+(şut haritası, xG gidişatı, momentum, pas haritaları, ortalama pozisyon), `TeamAnalytics`,
+`PlayerAnalytics`, `SetPieceAnalysis`, `SetPieceDataInsights`, `ActionZonesVisualisation`,
+`HeatMap`. Her görselde oyunun yazdığı `PerformanceSummary(Extended)` metinleri var.
+Ekran kapalıyken de okunanlar: `ExpectedFormations`, `GoalAnalysisScoring/Conceding`,
+`DataHubLastMatchFixtureDropdown`. `TeamTacticReference.TacticsGrid`: 6×5 saha bölgesi
+değerlendirmesi (satırlar kendi kalemizden rakibe, sütunlar soldan sağa) + oyuncu yorumları.
+Kadro: `FilteredPlayers` (28, Index -1 = seçilmemiş), `FilteredSubs` (yedekler).
+
+## Sürekli izleme (eklenti v6)
+
+Ekran açıkken hesaplanan alanlar için eklenti `Gozlem.IzlenenOzellikler` listesini sürekli
+dinler ve `veri\canli.json`'a yazar. Uygulama `OyunVerisi.Yukle` ile okuma, gözlem ve canlı
+veriyi birleştirir. Kancalar yalnızca doğrulanmış oyun sürümünde takılır.
+
 ## Sıradaki adım
 
 Dinleyicinin yakaladığı gerçek referans nesnelerini şablon olarak saklayıp bu özellikleri

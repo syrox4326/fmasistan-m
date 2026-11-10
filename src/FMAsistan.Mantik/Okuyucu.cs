@@ -347,6 +347,15 @@ namespace FMAsistan.Mantik
                 }
             }
 
+            // Takım talimatlarının seçili değerleri gibi alanlar bir PropertyID taşır: sayıyı değil adını yaz.
+            try
+            {
+                string veriTuru = v.DataType?.FullName;
+                if (veriTuru != null && veriTuru.EndsWith("PropertyID") && uint.TryParse(v.AsString(), out uint pid))
+                    return "#" + OzellikAdi(pid);
+            }
+            catch { }
+
             string metin;
             try
             {

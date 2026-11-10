@@ -20,6 +20,8 @@ string kok = KokBul();
 
 if (args.Length == 0) { Yardim(); return 1; }
 
+if (args[0] == "guncelle") return await Guncelle();
+
 try
 {
     var durum = SonDurum();
@@ -75,13 +77,75 @@ catch (Exception e) when (e is InvalidDataException or YapayZekaHatasi or FileNo
 
 TakimDurumu SonDurum()
 {
-    // Tüm okumalar eskiden yeniye birleştirilir (dosya adları zaman damgalı).
-    var dosyalar = Directory.GetFiles(Path.Combine(veri, "oku"), "*.json").OrderBy(f => f).ToList();
-    if (dosyalar.Count == 0) throw new FileNotFoundException("Eklenti okuması bulunamadı. Oyunda eklentiyle bir okuma yap.");
-    var birlesik = EklentiCozucu.Birlestir(dosyalar.Select(File.ReadAllText));
-    var adlar = birlesik.Where(k => k.Key.StartsWith("PersonReference:") && k.Value.TryGetValue("Name", out var n) && n.ValueKind == JsonValueKind.String)
-                        .ToDictionary(k => k.Key, k => k.Value["Name"].GetString()!);
-    return EklentiCozucu.TakimDurumu(birlesik, takimKimlik, adlar);
+    // Etkin okumalar, gözlemler ve sürekli izleme birleştirilir (her alan için en yeni değer).
+    var birlesik = OyunVerisi.Yukle(veri);
+    if (birlesik.Count == 0) throw new FileNotFoundException("Eklenti verisi bulunamadı. Oyun açıkken eklentiyle bir okuma yap.");
+    var adlar = OyunVerisi.Adlar(birlesik);
+    string kimlikDosyasi = Path.Combine(veri, "kimlik-adlari-sonuc.json");
+    var kimlikAdlari = File.Exists(kimlikDosyasi)
+        ? JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(kimlikDosyasi))
+        : null;
+    var temel = EklentiCozucu.TakimDurumu(birlesik, takimKimlik, adlar);
+    return temel with
+    {
+        VeriMerkezi = VeriMerkeziCozucu.Coz(birlesik, takimKimlik, adlar),
+        Ayarlar = VeriMerkeziCozucu.Ayarlar(birlesik, takimKimlik, kimlikAdlari),
+        Rakip = VeriMerkeziCozucu.Rakip(birlesik, takimKimlik, adlar),
+        Kadro = EklentiCozucu.Kadro(birlesik, takimKimlik, temel.Dizilis.Select(p => p.OyuncuKimlik).ToList(), adlar),
+    };
+}
+
+// Oyundan eksik verileri ister: kadronun adları, talimat kimliklerinin iç adları, temel taktik verisi.
+async Task<int> Guncelle()
+{
+    var birlesik = OyunVerisi.Yukle(veri);
+    var adlar = OyunVerisi.Adlar(birlesik);
+    var durum = SonDurum();
+    var istekler = new List<object>
+    {
+        new { kaynak = "TeamTacticReference:" + takimKimlik, yollar = new[] { "Name", "MentalityString", "MentalityDropdown", "MentalityDropdownOptions",
+              "TacticalStyleDropdown", "TacticalStyleDropdownOptions", "TacticalEffectiveness", "TacticalPositionsCombined",
+              "FilteredPlayers", "FilteredSubs" }.Concat(Talimatlar.Ozellikler.Keys).ToArray() },
+        new { kaynak = "TeamReference:" + takimKimlik, yollar = new[] { "Name", "NextFixture", "MostUsedFormation", "GoalAnalysisScoring", "GoalAnalysisConceding", "ExpectedFormations" } },
+    };
+    var eksik = durum.Kadro.Select(k => k.Kimlik).Concat(durum.Dizilis.Select(p => p.OyuncuKimlik)).Distinct().Where(k => !adlar.ContainsKey(k)).ToList();
+    foreach (var k in eksik) istekler.Add(new { kaynak = k, yollar = new[] { "Name" } });
+    Console.WriteLine($"Oyundan isteniyor: {istekler.Count} kaynak ({eksik.Count} eksik oyuncu adı).");
+    if (!await EklentiIste("oku.json", JsonSerializer.Serialize(new { sure = 12, istekler }), Path.Combine(veri, "oku", "son.txt"))) return 3;
+
+    // Talimat değerlerinin iç adları (PropertyID → ad).
+    birlesik = OyunVerisi.Yukle(veri);
+    var kimlikler = new List<uint>();
+    if (birlesik.TryGetValue("TeamTacticReference:" + takimKimlik, out var t))
+        foreach (var oz in Talimatlar.Ozellikler.Keys)
+            if (t.TryGetValue(oz, out var v) && v.ValueKind == JsonValueKind.Number && v.TryGetUInt32(out var id)) kimlikler.Add(id);
+    if (kimlikler.Count > 0)
+    {
+        string sonucDosyasi = Path.Combine(veri, "kimlik-adlari-sonuc.json");
+        var eski = File.Exists(sonucDosyasi) ? JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(sonucDosyasi))! : new();
+        if (!await EklentiIste("kimlik-adlari.json", JsonSerializer.Serialize(kimlikler), sonucDosyasi)) return 3;
+        var yeni = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(sonucDosyasi))!;
+        foreach (var (k, v) in eski) yeni.TryAdd(k, v);
+        File.WriteAllText(sonucDosyasi, JsonSerializer.Serialize(yeni, new JsonSerializerOptions { WriteIndented = true }));
+    }
+    Console.WriteLine("Güncellendi.");
+    return 0;
+}
+
+// Eklentiye bir komut dosyası bırakır ve sonuç dosyası yenilenene kadar bekler.
+async Task<bool> EklentiIste(string komutDosyasi, string icerik, string sonucDosyasi)
+{
+    var once = File.Exists(sonucDosyasi) ? File.GetLastWriteTimeUtc(sonucDosyasi) : DateTime.MinValue;
+    string yol = Path.Combine(veri, komutDosyasi);
+    File.WriteAllText(yol + ".tmp", icerik);
+    File.Move(yol + ".tmp", yol, overwrite: true);
+    for (int i = 0; i < 120; i++)
+    {
+        await Task.Delay(250);
+        if (File.Exists(sonucDosyasi) && File.GetLastWriteTimeUtc(sonucDosyasi) > once) { await Task.Delay(200); return true; }
+    }
+    Console.Error.WriteLine("Eklenti yanıt vermedi. Oyun açık ve kariyer yüklü mü?");
+    return false;
 }
 
 static (TeknikEkipUyesi, EkipPersonasi.Nitelikler) EkipOku(string yol)
@@ -108,6 +172,15 @@ static void Yazdir(TakimDurumu d, IReadOnlyList<Bulgu> bulgular)
         foreach (var p in d.Dizilis)
             Console.WriteLine($"  {p.Ad ?? p.OyuncuKimlik,-24} {Pozisyon.Ad(p.IpPozisyon)}, {p.IpRolu?.Ad ?? "?"} → {Pozisyon.Ad(p.OopPozisyon)}, {p.OopRolu?.Ad ?? "?"}");
     }
+    var yedek = d.Kadro.Where(k => k.Durum == KadroDurumu.Yedek).Select(k => k.Ad ?? k.Kimlik).ToList();
+    if (yedek.Count > 0) Console.WriteLine($"Yedekler: {string.Join(", ", yedek)}");
+    if (d.Ayarlar.Count > 0)
+    {
+        Console.WriteLine("\nTaktik ayarları:");
+        foreach (var a in d.Ayarlar) Console.WriteLine($"  {a.Ayar}: {a.Deger}");
+    }
+    if (d.Rakip is { } r)
+        Console.WriteLine($"\nRakip: {r.Ad} — {r.TehditDegerlendirmesi} (en çok: {r.EnCokKullanilanDizilis}; {r.Analiz.Notlar.Count} analiz notu)");
     Console.WriteLine();
     foreach (var b in bulgular)
     {
@@ -124,4 +197,4 @@ static string KokBul()
     return d?.FullName ?? throw new DirectoryNotFoundException("Proje kökü (bilgi klasörü) bulunamadı.");
 }
 
-static void Yardim() => Console.WriteLine("Kullanım: fmasistan analiz | sohbet <ekip.json> | sor <ekip.json> \"soru\"");
+static void Yardim() => Console.WriteLine("Kullanım: fmasistan guncelle | analiz | sohbet <ekip.json> | sor <ekip.json> \"soru\"");

@@ -84,12 +84,13 @@ public static class EkipPersonasi
         s.AppendLine("3. Dalkavukluk bir hatadır. 'Harika fikir' gibi boş onaylardan kaçın.");
         s.AppendLine("4. Her somut iddian aşağıdaki oyun verisine ya da analiz bulgularına dayansın. Bir bulguya dayanıyorsan kodunu an (ör. K-01). Veri yoksa 'bunu bilmiyoruz' de; uydurma.");
         s.AppendLine("5. Önerilerin somut ve uygulanabilir olsun (hangi oyuncu, hangi rol, hangi antrenman).");
+        s.AppendLine("6. Yalnızca Football Manager 27'de gerçekten var olan ayarları öner, oyundaki adlarıyla ve oyunun sunduğu seçeneklerle (aşağıdaki listeler). Listede olmayan bir ayar ya da seçenek uydurma; '6'dan 7'ye çıkar' gibi oyunda karşılığı olmayan sayısal ayarlar önerme. Emin değilsen hangi ekranda ne arayacağını tarif et.");
         s.AppendLine();
 
         if (durum != null)
         {
             s.AppendLine("## Oyundan okunan güncel durum");
-            s.AppendLine($"- Taktik: {durum.Taktik.Ad} (mentalite: {durum.Taktik.Mentalite}, yoğunluk: {durum.Taktik.Yogunluk})");
+            s.AppendLine($"- Taktik: {durum.Taktik.Ad} (mentalite: {durum.Taktik.Mentalite}" + (durum.Taktik.TaktikStili != null ? $", taktik stili: {durum.Taktik.TaktikStili}" : "") + ")");
             if (durum.Taktik.EnCokKullanilanDizilis != null) s.AppendLine($"- En çok kullanılan diziliş: {durum.Taktik.EnCokKullanilanDizilis}");
             var v = durum.TakimVerimliligi;
             s.AppendLine($"- Taktiksel verimlilik (0-100): genel {v.Genel}; oyuncu yeteneği {v.Yetenek.Genel} (yeterlilik {v.Yetenek.Yeterlilik}, rol uygunluğu {v.Yetenek.RolUygunlugu}); benimseme {v.Benimseme.Genel}; taktik anlayışı {v.Anlayis.Genel}" + (v.MacBilgisi != null ? $"; sonraki maç bilgisi {v.MacBilgisi.Genel}" : ""));
@@ -101,8 +102,60 @@ public static class EkipPersonasi
                 foreach (var p in durum.Dizilis)
                     s.AppendLine($"  - {p.Ad ?? p.OyuncuKimlik}: {Pozisyon.Ad(p.IpPozisyon)}, {p.IpRolu?.Ad ?? "?"} → {Pozisyon.Ad(p.OopPozisyon)}, {p.OopRolu?.Ad ?? "?"}");
             }
+            var yedek = durum.Kadro.Where(k => k.Durum == KadroDurumu.Yedek).ToList();
+            var disari = durum.Kadro.Where(k => k.Durum == KadroDurumu.KadroDisi).ToList();
+            if (yedek.Count > 0) s.AppendLine("- Yedekler: " + string.Join(", ", yedek.Select(k => k.Ad ?? k.Kimlik)));
+            if (disari.Count > 0) s.AppendLine("- Maç kadrosu dışında: " + string.Join(", ", disari.Select(k => k.Ad ?? k.Kimlik)));
+            if (durum.Kadro.Count > 0) s.AppendLine("  Oyuncu değişikliği önerirken yalnızca yedekleri kullan; ilk 11'deki bir oyuncuyu 'oyuna alalım' deme.");
             foreach (var u in durum.Uyarilar) s.AppendLine($"- Oyun uyarısı: {u}");
             s.AppendLine();
+
+            if (durum.Ayarlar.Count > 0)
+            {
+                s.AppendLine("## Taktik ekranındaki ayarlar (FM27'de var olanlar)");
+                foreach (var a in durum.Ayarlar)
+                    s.AppendLine($"- {a.Ayar}: {a.Deger}" + (a.Secenekler.Count > 0 ? $" (oyundaki seçenekler: {string.Join(", ", a.Secenekler)})" : ""));
+                s.AppendLine("Takım talimatlarının seçili değerleri oyundan okundu; Türkçe adları yaklaşık çeviridir, oyundaki etiket birebir farklı olabilir. Oyunun her talimat için sunduğu tam seçenek listesi bilinmiyor: talimat değişikliğini 'Tempo: bir kademe düşür' ya da 'Pres yoğunluğu: talimatı kaldır' gibi talimat adı + yön olarak öner; seçenek adı uydurma. 'Talimat yok (standart)' o talimatın verilmediği anlamına gelir.");
+                s.AppendLine();
+            }
+
+            var vm = durum.VeriMerkezi;
+            if (!vm.BosMu)
+            {
+                s.AppendLine("## Veri Merkezi (kulübün analiz ekibinin oyundaki raporları, olduğu gibi)");
+                if (vm.SonMac is { } sm)
+                    s.AppendLine($"- Son maç: {sm.Mac ?? "?"}; xG {sm.Xg?.ToString("0.00") ?? "?"}, şut {sm.Sut?.ToString() ?? "?"} (isabetli {sm.IsabetliSut?.ToString() ?? "?"}). {sm.Degerlendirme}");
+                foreach (var grup in vm.Notlar.GroupBy(n => n.Bolum))
+                {
+                    s.AppendLine($"### {grup.Key}");
+                    foreach (var not in grup.Take(15))
+                        s.AppendLine($"- {(not.Baslik != null ? not.Baslik + ": " : "")}{not.Metin.Replace("\n", " ")}");
+                }
+                if (vm.OyuncularSonMac.Count > 0)
+                    s.AppendLine("### Son maç pas verileri\n" + string.Join("; ", vm.OyuncularSonMac.Select(o => $"{o.Ad ?? o.OyuncuKimlik} %{o.PasIsabeti}")));
+                var sorunlu = vm.Izgara.Where(z => z.Durum.Contains("Sıkıntılı") && !z.Durum.Contains("Sıkıntısız")).ToList();
+                if (vm.Izgara.Count > 0)
+                    s.AppendLine($"### Taktik ızgarası: {vm.Izgara.Count} bölgenin {sorunlu.Count}'i sıkıntılı" +
+                                 (sorunlu.Count > 0 ? ": " + string.Join(" | ", sorunlu.Select(z => $"{z.Ad} ({z.Durum}): {string.Join(" ", z.Yorumlar)}")) : ""));
+                s.AppendLine("Bu metinler oyunun kendi analizidir. Yorumunu bunlara dayandır; maç istatistiği uydurma, burada olmayan bir sayıyı biliyormuş gibi yapma.");
+                s.AppendLine();
+            }
+
+            if (durum.Rakip is { } rk)
+            {
+                s.AppendLine($"## Sıradaki rakip: {rk.Ad ?? rk.TakimKimlik} (analiz ekibimizin raporu)");
+                if (rk.AnalistSeviyesi != null) s.AppendLine($"- Raporun güvenilirliği (analiz ekibimiz hakkında oyunun notu): {rk.AnalistSeviyesi}");
+                if (rk.TehditDegerlendirmesi != null) s.AppendLine($"- Tehdit değerlendirmesi: {rk.TehditDegerlendirmesi}");
+                if (rk.EnCokKullanilanDizilis != null) s.AppendLine($"- En çok kullandığı diziliş: {rk.EnCokKullanilanDizilis}");
+                foreach (var grup in rk.Analiz.Notlar.GroupBy(x => x.Bolum))
+                {
+                    s.AppendLine($"### Rakip — {grup.Key}");
+                    foreach (var not in grup.Take(12))
+                        s.AppendLine($"- {(not.Baslik != null ? not.Baslik + ": " : "")}{not.Metin.Replace("\n", " ")}");
+                }
+                s.AppendLine("Rakip hakkında yalnızca bu rapordakileri bil. Analiz ekibimiz zayıfsa rapor da sınırlıdır; bunu hesaba kat ve raporda olmayanı uydurma.");
+                s.AppendLine();
+            }
         }
 
         if (bulgular.Count > 0)

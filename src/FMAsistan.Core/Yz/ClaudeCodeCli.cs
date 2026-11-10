@@ -50,7 +50,11 @@ public sealed class ClaudeCodeCli : IYapayZeka
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8,
         };
-        foreach (var a in Argumanlar(sistem, oturumKimligi)) bilgi.ArgumentList.Add(a);
+        // Sistem talimatı dosyadan verilir: Windows komut satırı 32.767 karakterle sınırlı ve
+        // talimat (bilgi tabanı + Veri Merkezi) bunu aşabiliyor. İçerik özetiyle adlandırılır;
+        // aynı talimat aynı dosyayı kullanır.
+        string sistemDosyasi = SistemDosyasi(sistem);
+        foreach (var a in Argumanlar(sistemDosyasi, oturumKimligi)) bilgi.ArgumentList.Add(a);
 
         using var surec = Process.Start(bilgi) ?? throw new YapayZekaHatasi("Claude Code başlatılamadı.");
         using var zaman = CancellationTokenSource.CreateLinkedTokenSource(iptal);
@@ -71,14 +75,22 @@ public sealed class ClaudeCodeCli : IYapayZeka
         return Coz(await cikti, await hata, surec.ExitCode);
     }
 
-    internal IEnumerable<string> Argumanlar(string sistem, string? oturumKimligi)
+    internal string SistemDosyasi(string sistem)
+    {
+        var ozet = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(sistem)))[..16];
+        string yol = Path.Combine(_calismaKlasoru, $"sistem-{ozet}.txt");
+        if (!File.Exists(yol)) File.WriteAllText(yol, sistem, new UTF8Encoding(false));
+        return yol;
+    }
+
+    internal IEnumerable<string> Argumanlar(string sistemDosyasi, string? oturumKimligi)
     {
         yield return "-p";
         yield return "--output-format"; yield return "json";
         yield return "--model"; yield return _model;
         yield return "--tools"; yield return "";
         yield return "--strict-mcp-config";
-        yield return "--system-prompt"; yield return sistem;
+        yield return "--system-prompt-file"; yield return sistemDosyasi;
         if (oturumKimligi != null) { yield return "--resume"; yield return oturumKimligi; }
     }
 
