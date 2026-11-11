@@ -13,6 +13,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FMAsistan.Mantik", "FMAsist
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FMAsistan.Konsol", "FMAsistan.Konsol\FMAsistan.Konsol.csproj", "{331B1FA5-721B-4630-BD28-CC414B1A4A11}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FMAsistan.Uygulama", "FMAsistan.Uygulama\FMAsistan.Uygulama.csproj", "{30CFB9AC-07FE-4085-B1A4-38068DAA1EFF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ucuncu", "ucuncu", "{3646D96B-CD58-4BFF-9A44-09713022F77A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FMSuperScout", "FMSuperScout", "{0D1DE123-F833-410F-A1A8-1CD7F4C6C9FE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FMSuperScout.Scanner", "ucuncu\FMSuperScout\scanner\FMSuperScout.Scanner.csproj", "{862FDB0E-6758-4B46-B5D1-56B23D3CBA61}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +50,17 @@ Global
 		{331B1FA5-721B-4630-BD28-CC414B1A4A11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{331B1FA5-721B-4630-BD28-CC414B1A4A11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{331B1FA5-721B-4630-BD28-CC414B1A4A11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30CFB9AC-07FE-4085-B1A4-38068DAA1EFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30CFB9AC-07FE-4085-B1A4-38068DAA1EFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30CFB9AC-07FE-4085-B1A4-38068DAA1EFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30CFB9AC-07FE-4085-B1A4-38068DAA1EFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{862FDB0E-6758-4B46-B5D1-56B23D3CBA61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{862FDB0E-6758-4B46-B5D1-56B23D3CBA61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{862FDB0E-6758-4B46-B5D1-56B23D3CBA61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{862FDB0E-6758-4B46-B5D1-56B23D3CBA61}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0D1DE123-F833-410F-A1A8-1CD7F4C6C9FE} = {3646D96B-CD58-4BFF-9A44-09713022F77A}
+		{862FDB0E-6758-4B46-B5D1-56B23D3CBA61} = {0D1DE123-F833-410F-A1A8-1CD7F4C6C9FE}
 	EndGlobalSection
 EndGlobal

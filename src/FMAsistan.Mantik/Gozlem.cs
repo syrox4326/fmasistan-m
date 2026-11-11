@@ -83,11 +83,16 @@ namespace FMAsistan.Mantik
 
         public static bool Aktif => _bitis != DateTime.MinValue;
 
+        // SetData kancası oyunun açılışında takılmaz: oyun yerel veritabanını başlatırken SetData'yı
+        // kancanın güvenle karşılayamadığı bir durumda çağırıyor ve oyun çöküyor (2026-11-11,
+        // ErrorLog: AccessViolation in DMD<GameInteropSubsystem::SetData>). Kanca, oyunun arayüzü
+        // ilk takımı gösterdikten (başlangıç bitti) 15 sn sonra takılır.
+        private const double KancaBeklemeSn = 15;
+
         public static void Kur()
         {
             CanliYukle();
-            KancalariTak();
-            Giris.Gunluk($"Sürekli izleme açık ({IzlenenOzellikler.Count} özellik).");
+            Giris.Gunluk($"Sürekli izleme hazır ({IzlenenOzellikler.Count} özellik); kanca oyun açıldıktan sonra takılacak.");
         }
 
         public static void Kaldir()
@@ -111,7 +116,7 @@ namespace FMAsistan.Mantik
         {
             Degerler.Clear();
             _sayac = 0;
-            if (!_kancaTakili) KancalariTak();
+            if (!_kancaTakili && Okuyucu.IlkTakimGorulme != null) KancalariTak();
             _bitis = DateTime.Now.AddSeconds(saniye);
             Giris.Gunluk($"Gözlem başladı ({saniye} sn). Oyunda ekranları açabilirsin.");
         }
@@ -126,6 +131,12 @@ namespace FMAsistan.Mantik
 
         public static void Tick()
         {
+            if (!_kancaTakili && Okuyucu.IlkTakimGorulme is DateTime ilk && (DateTime.Now - ilk).TotalSeconds >= KancaBeklemeSn)
+            {
+                KancalariTak();
+                Giris.Gunluk("Sürekli izleme kancası takıldı.");
+            }
+
             if (_canliKirli && (DateTime.Now - _sonCanliYazma).TotalSeconds >= CanliYazmaAraligiSn)
                 CanliYaz();
 

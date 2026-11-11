@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Masaüstü uygulaması: WPF penceresi içinde WebView2. Arayüz web/ klasöründeki
+    HTML/CSS/JS'tir; veri, analiz ve yapay zekâ FMAsistan.Core'dan köprüyle gelir.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>FMAsistanim</AssemblyName>
+    <RootNamespace>FMAsistan.Uygulama</RootNamespace>
+    <StartupObject>FMAsistan.Uygulama.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FMAsistan.Core\FMAsistan.Core.csproj" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="web\**" Exclude="web\ornek-veri.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <!-- Bellek okuyucu (FMSuperScout, MIT, yalnızca okur): ayrı süreç olarak bellek\ klasöründen çalışır. -->
+  <ItemGroup>
+    <ProjectReference Include="..\ucuncu\FMSuperScout\scanner\FMSuperScout.Scanner.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <Target Name="BellekOkuyucuyuKopyala" AfterTargets="Build">
+    <ItemGroup>
+      <BellekDosyalari Include="..\ucuncu\FMSuperScout\scanner\bin\$(Configuration)\net8.0-windows\FMSuperScout.Scanner.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(BellekDosyalari)" DestinationFolder="$(OutDir)bellek" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

@@ -4,6 +4,7 @@ using FMAsistan.Core.Analiz;
 using FMAsistan.Core.Kaynak;
 using FMAsistan.Core.Veri;
 using FMAsistan.Core.Yz;
+using FMAsistan.Core.Uygulama;
 
 // FM Asistanım — geliştirme konsolu.
 //   fmasistan analiz                 → son eklenti okumasından taktik analizi
@@ -14,7 +15,6 @@ Console.OutputEncoding = Encoding.UTF8;
 Console.InputEncoding = Encoding.UTF8;
 
 string fmDir = Environment.GetEnvironmentVariable("FM_DIZIN") ?? @"C:\XboxGames\Football Manager 27\Content";
-string veri = Path.Combine(fmDir, "BepInEx", "FMAsistan", "veri");
 string takimKimlik = Environment.GetEnvironmentVariable("FM_TAKIM") ?? "402654676";
 string kok = KokBul();
 
@@ -32,6 +32,33 @@ try
         case "analiz":
             Yazdir(durum, bulgular);
             return 0;
+
+        case "disa-aktar" when args.Length >= 2:
+        {
+            var ekip = EkipProfili.Oyundan(durum.TeknikEkip).Concat(EkipProfili.HepsiniYukle(Path.Combine(kok, "ornekler", "ekip"))).ToList();
+            File.WriteAllText(args[1], ArayuzModeli.JsonOlustur(durum, bulgular, ekip, DateTime.Now));
+            // Tarayıcı önizlemesi için son raporlar.
+            var dep = new AnalizDepartmani(new ClaudeCodeCli(), Path.Combine(Ayarlar.UygulamaVerisi, "raporlar"));
+            var raporlar = Enum.GetValues<RaporTuru>().Select(dep.SonRapor).Where(r => r != null)
+                .Select(r => new { tur = r!.Tur.ToString(), baslik = r.Baslik, metin = r.Metin, zaman = r.Zaman.ToString("dd.MM HH:mm"), guncel = true });
+            File.WriteAllText(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(args[1]))!, "ornek-raporlar.json"), JsonSerializer.Serialize(raporlar, ArayuzModeli.Json));
+            Console.WriteLine("Arayüz verisi yazıldı: " + args[1]);
+            return 0;
+        }
+
+        case "rapor" when args.Length >= 2 && Enum.TryParse<RaporTuru>(args[1], true, out var tur):
+        {
+            var dep = new AnalizDepartmani(new ClaudeCodeCli(zamanAsimi: TimeSpan.FromMinutes(10)), Path.Combine(Ayarlar.UygulamaVerisi, "raporlar"));
+            string girdi = AnalizDepartmani.Girdi(durum, bulgular, KadroAnalizi.Calistir(durum));
+            if (args.Length >= 3 && args[2] == "--girdi") { Console.WriteLine(girdi); return 0; }
+            string bilgi = File.ReadAllText(Path.Combine(kok, "bilgi", "TAKTIK_BILGI_TABANI.md"));
+            var sure = System.Diagnostics.Stopwatch.StartNew();
+            var r = await dep.HazirlaAsync(tur, girdi, bilgi, durum.TeknikEkip.FirstOrDefault(e => e.Gorev.Contains("Analist"))?.Ad);
+            Console.WriteLine($"[{r.Baslik} · {sure.Elapsed.TotalSeconds:0} sn · {r.Metin.Length} karakter]");
+            Console.WriteLine();
+            Console.WriteLine(r.Metin);
+            return 0;
+        }
 
         case "sohbet" or "sor" when args.Length >= 2:
         {
@@ -75,83 +102,12 @@ catch (Exception e) when (e is InvalidDataException or YapayZekaHatasi or FileNo
     return 2;
 }
 
-TakimDurumu SonDurum()
-{
-    // Etkin okumalar, gözlemler ve sürekli izleme birleştirilir (her alan için en yeni değer).
-    var birlesik = OyunVerisi.Yukle(veri);
-    if (birlesik.Count == 0) throw new FileNotFoundException("Eklenti verisi bulunamadı. Oyun açıkken eklentiyle bir okuma yap.");
-    var adlar = OyunVerisi.Adlar(birlesik);
-    string kimlikDosyasi = Path.Combine(veri, "kimlik-adlari-sonuc.json");
-    var kimlikAdlari = File.Exists(kimlikDosyasi)
-        ? JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(kimlikDosyasi))
-        : null;
-    var temel = EklentiCozucu.TakimDurumu(birlesik, takimKimlik, adlar);
-    return temel with
-    {
-        VeriMerkezi = VeriMerkeziCozucu.Coz(birlesik, takimKimlik, adlar),
-        Ayarlar = VeriMerkeziCozucu.Ayarlar(birlesik, takimKimlik, kimlikAdlari),
-        Rakip = VeriMerkeziCozucu.Rakip(birlesik, takimKimlik, adlar),
-        Kadro = EklentiCozucu.Kadro(birlesik, takimKimlik, temel.Dizilis.Select(p => p.OyuncuKimlik).ToList(), adlar),
-    };
-}
+// Etkin okumalar, gözlemler ve sürekli izleme birleştirilir (her alan için en yeni değer).
+TakimDurumu SonDurum() => DurumYukleyici.Yukle(new Ayarlar(fmDir, takimKimlik, kok));
 
-// Oyundan eksik verileri ister: kadronun adları, talimat kimliklerinin iç adları, temel taktik verisi.
+// Oyundan eksik verileri ister (FMAsistan.Core.Uygulama.OyunGuncelleyici).
 async Task<int> Guncelle()
-{
-    var birlesik = OyunVerisi.Yukle(veri);
-    var adlar = OyunVerisi.Adlar(birlesik);
-    var durum = SonDurum();
-    var istekler = new List<object>
-    {
-        new { kaynak = "TeamTacticReference:" + takimKimlik, yollar = new[] { "Name", "MentalityString", "MentalityDropdown", "MentalityDropdownOptions",
-              "TacticalStyleDropdown", "TacticalStyleDropdownOptions", "TacticalEffectiveness", "TacticalPositionsCombined",
-              "FilteredPlayers", "FilteredSubs" }.Concat(Talimatlar.Ozellikler.Keys).ToArray() },
-        new { kaynak = "TeamReference:" + takimKimlik, yollar = new[] { "Name", "NextFixture", "MostUsedFormation", "GoalAnalysisScoring", "GoalAnalysisConceding", "ExpectedFormations" } },
-    };
-    if (durum.Rakip is { } rk)
-        istekler.Add(new { kaynak = "TeamReference:" + rk.TakimKimlik, yollar = new[] { "Name", "ScoutReportStrengths", "ScoutReportWeaknesses",
-            "ExpectedFormations", "MostUsedFormation", "NextOppositionThreatLevelAssessment", "DataAnalystLevelInfo" } });
-    var rakipOyunculari = durum.Rakip?.MuhtemelTaktik?.Oyuncular.Select(o => o.OyuncuKimlik) ?? Enumerable.Empty<string>();
-    var eksik = durum.Kadro.Select(k => k.Kimlik).Concat(durum.Dizilis.Select(p => p.OyuncuKimlik)).Concat(rakipOyunculari)
-        .Distinct().Where(k => !adlar.ContainsKey(k)).ToList();
-    foreach (var k in eksik) istekler.Add(new { kaynak = k, yollar = new[] { "Name" } });
-    Console.WriteLine($"Oyundan isteniyor: {istekler.Count} kaynak ({eksik.Count} eksik oyuncu adı).");
-    if (!await EklentiIste("oku.json", JsonSerializer.Serialize(new { sure = 12, istekler }), Path.Combine(veri, "oku", "son.txt"))) return 3;
-
-    // Talimat değerlerinin iç adları (PropertyID → ad).
-    birlesik = OyunVerisi.Yukle(veri);
-    var kimlikler = new List<uint>();
-    if (birlesik.TryGetValue("TeamTacticReference:" + takimKimlik, out var t))
-        foreach (var oz in Talimatlar.Ozellikler.Keys)
-            if (t.TryGetValue(oz, out var v) && v.ValueKind == JsonValueKind.Number && v.TryGetUInt32(out var id)) kimlikler.Add(id);
-    if (kimlikler.Count > 0)
-    {
-        string sonucDosyasi = Path.Combine(veri, "kimlik-adlari-sonuc.json");
-        var eski = File.Exists(sonucDosyasi) ? JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(sonucDosyasi))! : new();
-        if (!await EklentiIste("kimlik-adlari.json", JsonSerializer.Serialize(kimlikler), sonucDosyasi)) return 3;
-        var yeni = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(sonucDosyasi))!;
-        foreach (var (k, v) in eski) yeni.TryAdd(k, v);
-        File.WriteAllText(sonucDosyasi, JsonSerializer.Serialize(yeni, new JsonSerializerOptions { WriteIndented = true }));
-    }
-    Console.WriteLine("Güncellendi.");
-    return 0;
-}
-
-// Eklentiye bir komut dosyası bırakır ve sonuç dosyası yenilenene kadar bekler.
-async Task<bool> EklentiIste(string komutDosyasi, string icerik, string sonucDosyasi)
-{
-    var once = File.Exists(sonucDosyasi) ? File.GetLastWriteTimeUtc(sonucDosyasi) : DateTime.MinValue;
-    string yol = Path.Combine(veri, komutDosyasi);
-    File.WriteAllText(yol + ".tmp", icerik);
-    File.Move(yol + ".tmp", yol, overwrite: true);
-    for (int i = 0; i < 120; i++)
-    {
-        await Task.Delay(250);
-        if (File.Exists(sonucDosyasi) && File.GetLastWriteTimeUtc(sonucDosyasi) > once) { await Task.Delay(200); return true; }
-    }
-    Console.Error.WriteLine("Eklenti yanıt vermedi. Oyun açık ve kariyer yüklü mü?");
-    return false;
-}
+    => await OyunGuncelleyici.GuncelleAsync(new Ayarlar(fmDir, takimKimlik, kok), Console.WriteLine) ? 0 : 3;
 
 static (TeknikEkipUyesi, EkipPersonasi.Nitelikler) EkipOku(string yol)
 {

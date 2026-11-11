@@ -64,17 +64,76 @@ namespace FMAsistan.Mantik
         private static DateTime _bitis = DateTime.MinValue;
         private static Il2CppSystem.Object _sahip;
 
+        // Sıradaki toplu okumalar: (oku.json biçiminde istek, bitince çağrılacak işlev).
+        private static readonly Queue<(string json, Action<Dictionary<string, Dictionary<string, object>>> bitti)> Kuyruk = new();
+        private static Action<Dictionary<string, Dictionary<string, object>>> _bitti;
+
+        // Kimliksiz referanslar (FixtureReference{...} gibi) okunan değerlerde metin olarak görünür;
+        // o metinle yeniden kaynak olarak kullanılabilsinler diye ayrıca saklanır.
+        private const int MetinSablonSiniri = 20000;
+        private static int _metinSablonu;
+
         public static int SablonSayisi => Sablonlar.Count;
+
+        /// <summary>Bir okuma sürüyor ya da sırada bekliyor.</summary>
+        public static bool Mesgul => _bitis != DateTime.MinValue || Kuyruk.Count > 0;
+
+        /// <summary>Kaynak şu an kurulabiliyor mu (şablonu var ya da aynı türden kurulabilir).</summary>
+        public static bool KaynakVar(string ad) => KaynakDeger(ad) != null;
+
+        // Oyunun kendi arayüzünün istediği (OpenChannel) referanslar. Tarayıcı yalnızca oyun
+        // takımımızı kendisi gösterdikten sonra başlar: kariyer yüklenmeden veri istemek oyunu çökertir.
+        private const string GorulenAnahtari = "FMAsistan.OyundaGorulen";
+        private static readonly HashSet<string> OyundaGorulen = GorulenDeposu();
+
+        private static HashSet<string> GorulenDeposu()
+        {
+            if (AppDomain.CurrentDomain.GetData(GorulenAnahtari) is HashSet<string> h) return h;
+            var yeni = new HashSet<string>();
+            AppDomain.CurrentDomain.SetData(GorulenAnahtari, yeni);
+            return yeni;
+        }
+
+        /// <summary>Oyunun arayüzünün ilk kez bir takım istediği an (oyunun başlangıcı bitmiştir).</summary>
+        public static DateTime? IlkTakimGorulme
+        {
+            get => AppDomain.CurrentDomain.GetData("FMAsistan.IlkTakim") as DateTime?;
+            private set => AppDomain.CurrentDomain.SetData("FMAsistan.IlkTakim", value);
+        }
+
+        /// <summary>Bu referansı oyunun arayüzü kendisi istedi mi (bizim kopyaladığımız değil).</summary>
+        public static bool OyundaGoruldu(string ad) => OyundaGorulen.Contains(ad);
+        public static int OyundaGorulenSayisi => OyundaGorulen.Count;
+
+        /// <summary>Toplu okumayı sıraya ekler; sonuç, okuma bitince ana iş parçacığında verilir.</summary>
+        public static void Ekle(string json, Action<Dictionary<string, Dictionary<string, object>>> bitti)
+            => Kuyruk.Enqueue((json, bitti));
+
+        /// <summary>oku.json komutu: sonucu oku\&lt;zaman&gt;.json ve oku\son.txt olarak yazar.</summary>
+        public static void DosyaIstegi(string json) => Ekle(json, sonuc =>
+        {
+            string zaman = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+            Giris.DosyaYaz($"oku/{zaman}.json", Json(sonuc));
+            Giris.DosyaYaz("oku/son.txt", zaman);
+        });
+
+        internal static string Json(object o) => JsonSerializer.Serialize(o, new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        });
 
         // --- Şablon yakalama (dinleyiciden, her istekte çağrılır) ---
 
-        public static void Yakala(InteropReference r)
+        public static void Yakala(InteropReference r, bool oyundan = true)
         {
             if (r == null) return;
             string tur = TurAdi(r);
             if (tur == null) return;
             Sablonlar[tur] = r;
             string db = DbKimlik(r);
+            if (oyundan && db != null && OyundaGorulen.Count < SablonSiniri) OyundaGorulen.Add(tur + ":" + db);
+            if (oyundan && tur == "TeamReference" && IlkTakimGorulme == null) IlkTakimGorulme = DateTime.Now;
             if (db != null && (Sablonlar.Count < SablonSiniri || Sablonlar.ContainsKey(tur + ":" + db)))
                 Sablonlar[tur + ":" + db] = r;
         }
@@ -88,9 +147,10 @@ namespace FMAsistan.Mantik
 
         // --- İstek ---
 
-        public static void Baslat(string json)
+        private static void Baslat(string json, Action<Dictionary<string, Dictionary<string, object>>> bitti)
         {
             Temizle();
+            _bitti = bitti;
             using var belge = JsonDocument.Parse(json);
             var kok = belge.RootElement;
             int sure = kok.TryGetProperty("sure", out var s) ? Math.Clamp(s.GetInt32(), 2, 60) : 6;
@@ -145,7 +205,19 @@ namespace FMAsistan.Mantik
 
         public static void Tick()
         {
-            if (_bitis == DateTime.MinValue) return;
+            if (_bitis == DateTime.MinValue)
+            {
+                if (Kuyruk.Count == 0) return;
+                var (json, geri) = Kuyruk.Dequeue();
+                try { Baslat(json, geri); }
+                catch (Exception e)
+                {
+                    Giris.Gunluk("Okuma başlatılamadı: " + (e.InnerException ?? e).Message);
+                    Temizle();
+                    try { geri?.Invoke(new Dictionary<string, Dictionary<string, object>>()); } catch { }
+                }
+                return;
+            }
             bool hepsiGeldi = Bekleyenler.All(b => b.Geldi);
             if (!hepsiGeldi && DateTime.Now < _bitis) return;
             _bitis = DateTime.MinValue;
@@ -156,15 +228,11 @@ namespace FMAsistan.Mantik
                 if (!sonuc.TryGetValue(b.Kaynak, out var d)) sonuc[b.Kaynak] = d = new Dictionary<string, object>();
                 d[b.Yol] = b.Geldi ? b.Deger : "!zaman aşımı";
             }
-            string zaman = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-            Giris.DosyaYaz($"oku/{zaman}.json", JsonSerializer.Serialize(sonuc, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            }));
-            Giris.DosyaYaz("oku/son.txt", zaman);
-            Giris.Gunluk($"Okuma bitti: {Bekleyenler.Count(b => b.Geldi)}/{Bekleyenler.Count} değer geldi.");
+            int gelen = Bekleyenler.Count(b => b.Geldi), toplam = Bekleyenler.Count;
+            var bitti = _bitti;
             Temizle();
+            Giris.Gunluk($"Okuma bitti: {gelen}/{toplam} değer geldi.");
+            bitti?.Invoke(sonuc);
         }
 
         public static void Temizle()
@@ -175,6 +243,15 @@ namespace FMAsistan.Mantik
                 try { var k = b.Anahtar; BindingUtils.UnbindIfValid(ref k, b.Geri); } catch { }
             }
             Bekleyenler.Clear();
+            _bitis = DateTime.MinValue;
+            _bitti = null;
+        }
+
+        /// <summary>Kuyruğu da boşaltır (mantık kapanırken).</summary>
+        public static void HepsiniTemizle()
+        {
+            Kuyruk.Clear();
+            Temizle();
         }
 
         private static void DegerGeldi(Istek i, TypedValue v)
@@ -320,7 +397,7 @@ namespace FMAsistan.Mantik
                 var r = o.TryCast<InteropReference>();
                 if (r != null)
                 {
-                    Yakala(r); // sonraki okumalarda kaynak olarak kullanılabilsin
+                    Yakala(r, oyundan: false); // sonraki okumalarda kaynak olarak kullanılabilsin
                     string tur = TurAdi(r) ?? "?";
                     string db = DbKimlik(r);
                     if (db != null) return $"{tur}:{db}";
@@ -328,7 +405,9 @@ namespace FMAsistan.Mantik
                     PairList p = r.m_id;
                     for (int i = 0; p != null && i < p.Count; i++)
                         if (p[i].m_id != OturumAlani) sb.Append(OzellikAdi(p[i].m_id)).Append('=').Append(p[i].m_value).Append(',');
-                    return sb.Append('}').ToString();
+                    string ad = sb.Append('}').ToString();
+                    if (!Sablonlar.ContainsKey(ad) && _metinSablonu < MetinSablonSiniri) { Sablonlar[ad] = r; _metinSablonu++; }
+                    return ad;
                 }
 
                 var kayit = o.TryCast<Record>();

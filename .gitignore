@@ -4,3 +4,5 @@ obj/
 .vs/
 .yapi/
 *.oturum
+src/FMAsistan.Uygulama/web/ornek-veri.json
+src/FMAsistan.Uygulama/web/ornek-raporlar.json

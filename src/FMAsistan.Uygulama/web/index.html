@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FM Asistanım</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <aside class="kenar">
+    <div class="marka">
+      <div class="marka-logo">FA</div>
+      <div>
+        <div class="marka-ad">FM Asistanım</div>
+        <div class="marka-alt" id="kenar-takim">—</div>
+      </div>
+    </div>
+    <nav class="menu" id="menu">
+      <button data-ekran="genel" class="secili">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        <span>Genel bakış</span><i></i>
+      </button>
+      <div class="menu-grup">Analiz</div>
+      <button data-ekran="taktik">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><circle cx="12" cy="12" r="3"/></svg>
+        <span>Taktik</span><i class="nokta" data-rapor="Taktik"></i>
+      </button>
+      <button data-ekran="mac">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>
+        <span>Maç hazırlığı</span><i class="nokta" data-rapor="MacOnu"></i>
+      </button>
+      <button data-ekran="kadro">
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16 14.6c2.6.1 4.6 1.9 5.3 5.4"/></svg>
+        <span>Kadro</span><i class="nokta" data-rapor="Kadro"></i>
+      </button>
+      <button data-ekran="antrenman">
+        <svg viewBox="0 0 24 24"><path d="M4 12h3l2-6 4 12 2-6h5"/></svg>
+        <span>Antrenman</span><i class="nokta" data-rapor="Antrenman"></i>
+      </button>
+      <div class="menu-grup">Oyun</div>
+      <button data-ekran="veri">
+        <svg viewBox="0 0 24 24"><line x1="5" y1="20" x2="5" y2="11"/><line x1="12" y1="20" x2="12" y2="5"/><line x1="19" y1="20" x2="19" y2="14"/></svg>
+        <span>Veri Merkezi</span><i></i>
+      </button>
+      <button data-ekran="ekip">
+        <svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>
+        <span>Teknik ekip</span><i></i>
+      </button>
+    </nav>
+    <div class="kenar-alt">
+      <div class="canli">
+        <div class="canli-satir"><i id="canli-oyun"></i><span>Oyun</span><b id="canli-oyun-metin">—</b></div>
+        <div class="canli-satir"><i id="canli-tarama"></i><span>Oyun taraması</span><b id="canli-tarama-metin">—</b></div>
+        <div class="canli-satir"><i id="canli-bellek"></i><span>Oyuncu verisi</span><b id="canli-bellek-metin">—</b></div>
+      </div>
+      <div class="bilgi-satir" id="veri-durum"></div>
+      <button class="dugme tam" id="yenile">Şimdi güncelle</button>
+    </div>
+  </aside>
+
+  <main class="icerik">
+    <!-- GENEL BAKIŞ -->
+    <section class="ekran secili" id="ekran-genel">
+      <header class="ekran-ust">
+        <div><div class="ust" id="genel-ust">Genel bakış</div><h1 id="genel-baslik">—</h1></div>
+        <div class="etiketler" id="genel-etiketler"></div>
+      </header>
+      <div class="ekran-govde">
+        <div class="ozet-izgara" id="gostergeler"></div>
+        <div class="duzen">
+          <div class="hukum-izgara" id="hukumler"></div>
+          <div class="yan">
+            <div class="kart mac-karti">
+              <div class="kart-ust"><h3>Sıradaki maç</h3><span class="alt" id="genel-mac-ne"></span></div>
+              <div class="kart-ic" id="genel-mac"></div>
+            </div>
+            <div class="kart">
+              <div class="kart-ust"><h3>Öncelikler</h3><span class="alt">Analiz motoru</span></div>
+              <div class="kart-ic sikisik" id="oncelikler"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAKTİK -->
+    <section class="ekran" id="ekran-taktik">
+      <header class="ekran-ust">
+        <div><div class="ust">Taktik</div><h1 id="taktik-ad">—</h1></div>
+        <div class="etiketler" id="taktik-etiketler"></div>
+      </header>
+      <div class="ekran-govde">
+        <div class="duzen">
+          <article class="kart rapor" data-rapor="Taktik"></article>
+          <aside class="yan">
+            <div class="kart">
+              <div class="kart-ust"><h3>Taktiksel verimlilik</h3></div>
+              <div class="kart-ic"><div class="verim"><div class="halka" id="verim-halka"></div><div id="verim-bilesenler"></div></div></div>
+            </div>
+            <div class="kart">
+              <div class="kart-ust"><h3>Rol uyumu</h3>
+                <div class="sekme" id="faz-sekme"><button data-faz="ip" class="secili">Topla</button><button data-faz="oop">Topsuz</button></div>
+              </div>
+              <div class="kart-ic">
+                <div class="saha" id="saha-bizim"></div>
+                <div class="lejant"><span><i class="iyi"></i>4+ yıldız</span><span><i class="dikkat"></i>3–4</span><span><i class="kotu"></i>3 altı</span><span><i></i>bilinmiyor</span></div>
+              </div>
+            </div>
+            <div class="kart">
+              <div class="kart-ust"><h3>Taktik anlayışı</h3><span class="alt">Zayıftan güçlüye</span></div>
+              <div class="kart-ic"><div id="alanlar"></div><p class="not-metni" id="alan-tavsiyesi"></p></div>
+            </div>
+            <div class="kart">
+              <div class="kart-ust"><h3>Motorun bulguları</h3><span class="alt" id="bulgu-sayisi"></span></div>
+              <div class="kart-ic sikisik" id="bulgular"></div>
+            </div>
+            <details class="kart">
+              <summary class="kart-ust"><h3>Oyundaki taktik ayarları</h3><span class="ok">›</span></summary>
+              <div class="kart-ic sikisik" id="ayarlar"></div>
+            </details>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAÇ HAZIRLIĞI -->
+    <section class="ekran" id="ekran-mac">
+      <header class="ekran-ust">
+        <div><div class="ust">Maç hazırlığı · sıradaki rakip</div><h1 id="rakip-ad">—</h1></div>
+        <div class="etiketler" id="rakip-etiketler"></div>
+      </header>
+      <div class="ekran-govde">
+        <div class="uyari-kutu" id="rakip-analist" hidden></div>
+        <div class="duzen">
+          <article class="kart rapor" data-rapor="MacOnu"></article>
+          <aside class="yan">
+            <div class="kart">
+              <div class="kart-ust"><h3>Muhtemel 11</h3><span class="alt" id="rakip-dizilis"></span></div>
+              <div class="kart-ic"><div class="saha" id="saha-rakip"></div><p class="not-metni" id="rakip-ozet"></p></div>
+            </div>
+            <div class="kart">
+              <div class="kart-ust"><h3>Kullandığı dizilişler</h3></div>
+              <div class="kart-ic" id="rakip-dizilisler"></div>
+            </div>
+            <div class="kart">
+              <div class="kart-ust"><h3>Gözlemci raporu</h3></div>
+              <div class="kart-ic">
+                <div class="grup-baslik c-iyi" style="padding-top:0">Güçlü yönler</div><ul class="madde" id="rakip-guclu"></ul>
+                <div class="grup-baslik c-kotu">Zayıf yönler</div><ul class="madde" id="rakip-zayif"></ul>
+              </div>
+            </div>
+            <div class="kart">
+              <div class="kart-ust"><h3>Fikstür</h3><span class="alt" id="lig-sirasi"></span></div>
+              <div class="kart-ic sikisik" id="fikstur"></div>
+            </div>
+            <details class="kart">
+              <summary class="kart-ust"><h3>Analiz ekibinin notları</h3><span class="ok">›</span></summary>
+              <div class="kart-ic sikisik" id="rakip-notlar"></div>
+            </details>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- KADRO -->
+    <section class="ekran" id="ekran-kadro">
+      <header class="ekran-ust">
+        <div><div class="ust">Kadro</div><h1 id="kadro-baslik">—</h1></div>
+        <div class="etiketler" id="kadro-etiketler"></div>
+      </header>
+      <div class="ekran-govde">
+        <div class="duzen">
+          <article class="kart rapor" data-rapor="Kadro"></article>
+          <aside class="yan">
+            <div class="kart">
+              <div class="kart-ust"><h3>Slot uygunluğu</h3>
+                <div class="sekme" id="slot-sekme"><button data-faz="ip" class="secili">Topla</button><button data-faz="oop">Topsuz</button></div>
+              </div>
+              <div class="kart-ic sikisik" id="slot-tablosu"></div>
+            </div>
+          </aside>
+        </div>
+        <div class="kart" style="margin-top:20px">
+          <div class="kart-ust"><h3>Kadro tablosu</h3><span class="alt">Başlığa tıklayıp sırala, satıra tıklayıp ayrıntıyı aç</span></div>
+          <div class="tablo-kap" style="border:0;border-radius:0"><table class="kadro" id="kadro-tablosu"></table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ANTRENMAN -->
+    <section class="ekran" id="ekran-antrenman">
+      <header class="ekran-ust">
+        <div><div class="ust">Antrenman</div><h1>Haftalık plan ve bireysel çalışma</h1></div>
+        <div class="etiketler" id="antrenman-etiketler"></div>
+      </header>
+      <div class="ekran-govde">
+        <div class="duzen">
+          <article class="kart rapor" data-rapor="Antrenman"></article>
+          <aside class="yan">
+            <div class="kart"><div class="kart-ust"><h3>Antrenör atamaları</h3></div><div class="kart-ic sikisik" id="atamalar"></div></div>
+            <div class="kart"><div class="kart-ust"><h3>Antrenman puanları</h3></div><div class="kart-ic" id="antrenman-puanlari"></div></div>
+            <div class="kart"><div class="kart-ust"><h3>Kulüp</h3></div><div class="kart-ic sikisik" id="kulup"></div></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- VERİ MERKEZİ -->
+    <section class="ekran" id="ekran-veri">
+      <header class="ekran-ust">
+        <div><div class="ust">Veri Merkezi</div><h1>Oyunun analiz notları</h1></div>
+        <div class="etiketler"><span class="etiket">Oyundaki metinler, olduğu gibi</span></div>
+      </header>
+      <div class="ekran-govde">
+        <div class="veri-izgara">
+          <div class="kart" id="son-mac"></div>
+          <div class="kart">
+            <div class="kart-ust"><h3>Taktik ızgarası</h3><span class="alt">Hücum yönü yukarı</span></div>
+            <div class="kart-ic"><div class="izgara-saha" id="izgara-saha"></div><div class="izgara-detay" id="izgara-detay">Bir bölgenin üzerine gel.</div></div>
+          </div>
+          <div class="kart">
+            <div class="kart-ust"><h3>Son maç · pas isabeti</h3></div>
+            <div class="kart-ic" id="pas-listesi"></div>
+          </div>
+        </div>
+        <div class="kart">
+          <div class="kart-ust"><h3>Notlar</h3></div>
+          <div class="kart-ic sikisik" id="veri-notlar"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEKNİK EKİP -->
+    <section class="ekran" id="ekran-ekip">
+      <header class="ekran-ust">
+        <div><div class="ust">Teknik ekip</div><h1>Ekiple konuş</h1></div>
+        <div class="etiketler"><span class="etiket">Ekip yalnızca bildiği kadarını bilir</span></div>
+      </header>
+      <div class="ekran-govde">
+        <div class="ekip-duzen">
+          <div class="kart ekip-liste" id="ekip-liste"></div>
+          <div class="kart sohbet">
+            <div class="kart-ust"><h3 id="sohbet-ust">—</h3><span class="alt" id="sohbet-alt"></span></div>
+            <div class="sohbet-akis" id="sohbet-akis"></div>
+            <form class="sohbet-giris" id="sohbet-form">
+              <textarea id="sohbet-metin" rows="2" placeholder="Mesajını yaz. Enter gönderir, Shift+Enter yeni satır."></textarea>
+              <button type="submit" class="dugme ana" id="sohbet-gonder">Gönder</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

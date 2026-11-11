@@ -14,7 +14,7 @@ namespace FMAsistan.Mantik
     /// </summary>
     public static class Giris
     {
-        public const string Surum = "6";
+        public const string Surum = "9";
 
         /// <summary>İletişim klasörü; yükleyici verir (oyun klasöründe BepInEx\FMAsistan\veri).</summary>
         internal static string Klasor { get; private set; }
@@ -58,7 +58,8 @@ namespace FMAsistan.Mantik
 
         public static void Durdur()
         {
-            Guvenli("Okuyucu temizleme", Okuyucu.Temizle);
+            Guvenli("Tarayıcı durdurma", Tarayici.Durdur);
+            Guvenli("Okuyucu temizleme", Okuyucu.HepsiniTemizle);
             Guvenli("Gözlem kaldırma", Gozlem.Kaldir);
             Guvenli("Dinleyici kaldırma", Dinleyici.Kaldir);
         }
@@ -70,6 +71,7 @@ namespace FMAsistan.Mantik
             Guvenli("Komutlar", Komutlar);
             Guvenli("Dinleyici", Dinleyici.Tick);
             Guvenli("Okuyucu", Okuyucu.Tick);
+            Guvenli("Tarayıcı", Tarayici.Tick);
             Guvenli("Gözlem", Gozlem.Tick);
         }
 
@@ -89,7 +91,7 @@ namespace FMAsistan.Mantik
             {
                 string icerik = File.ReadAllText(oku);
                 File.Delete(oku);
-                Okuyucu.Baslat(icerik);
+                Okuyucu.DosyaIstegi(icerik);
             }
 
             string gozle = Path.Combine(Klasor, "gozle.flag");
@@ -186,6 +188,9 @@ namespace FMAsistan.Mantik
                     ["dogrulandi"] = KancaGuvenli,
                     ["dinleniyor"] = Dinleyici.Aktif,
                     ["sablon"] = Okuyucu.SablonSayisi,
+                    ["tarama"] = Tarayici.Durum,
+                    ["gorulen"] = Okuyucu.OyundaGorulenSayisi,
+                    ["ilkTakim"] = Okuyucu.IlkTakimGorulme?.ToString("s"),
                     ["hatalar"] = Hatalar,
                 }));
             }

@@ -86,6 +86,24 @@ public sealed record TakimDurumu(
 
     /// <summary>Kadro: ilk 11, yedekler ve kadro dışı (taktik ekranındaki oyuncu listesi).</summary>
     public IReadOnlyList<KadroOyuncusu> Kadro { get; init; } = Array.Empty<KadroOyuncusu>();
+
+    /// <summary>Kadrodaki oyuncuların ayrıntılı profili (otomatik tarama + bellek).</summary>
+    public IReadOnlyList<OyuncuProfili> Profiller { get; init; } = Array.Empty<OyuncuProfili>();
+
+    /// <summary>Teknik ekip (oyundan otomatik).</summary>
+    public IReadOnlyList<EkipUyesiProfili> TeknikEkip { get; init; } = Array.Empty<EkipUyesiProfili>();
+
+    public AntrenmanDurumu Antrenman { get; init; } = AntrenmanDurumu.Bos;
+    public KulupDurumu? Kulup { get; init; }
+    public FiksturDurumu Fikstur { get; init; } = FiksturDurumu.Bos;
+
+    /// <summary>Oyun içi tarih (bellekten), ör. 2026-11-07.</summary>
+    public string? OyunTarihi { get; init; }
+
+    /// <summary>Verinin kaynakları ve zamanları (arayüzde gösterilir).</summary>
+    public IReadOnlyList<string> Kaynaklar { get; init; } = Array.Empty<string>();
+
+    public OyuncuProfili? Profil(string kimlik) => Profiller.FirstOrDefault(p => p.Kimlik == kimlik);
 }
 
 public enum KadroDurumu { IlkOnbir, Yedek, KadroDisi }
